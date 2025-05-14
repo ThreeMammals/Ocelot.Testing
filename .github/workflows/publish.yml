@@ -1,0 +1,38 @@
+name: Publish .NET Package
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: |
+            8.0.x
+            9.0.x
+
+      - name: List .NET SDKs
+        run: dotnet --list-sdks
+
+      - name: .NET Info
+        run: dotnet --info
+
+      - name: Restore dependencies
+        run: dotnet restore ./Ocelot.Testing.sln
+
+      - name: Build project
+        run: dotnet build ./src/Ocelot.Testing.csproj --configuration Release --no-restore
+
+      - name: Pack project
+        run: dotnet pack ./src/Ocelot.Testing.csproj --configuration Release --output ./packages
+
+      - name: Publish package to GitHub Packages
+        run: dotnet nuget push ./packages/*.nupkg --source "https://nuget.pkg.github.com/ThreeMammals/index.json" --api-key ${{ secrets.GITHUB_TOKEN }} --skip-duplicate
