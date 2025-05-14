@@ -1,0 +1,25 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 17
+VisualStudioVersion = 17.13.35931.197
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Ocelot.Testing", "src\Ocelot.Testing.csproj", "{ED328F08-4582-DC56-E75F-EFD986B7F781}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{ED328F08-4582-DC56-E75F-EFD986B7F781}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{ED328F08-4582-DC56-E75F-EFD986B7F781}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{ED328F08-4582-DC56-E75F-EFD986B7F781}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{ED328F08-4582-DC56-E75F-EFD986B7F781}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {F02D623A-5D49-4A15-971D-BFE8726B41DC}
+	EndGlobalSection
+EndGlobal
