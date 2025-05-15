@@ -61,9 +61,7 @@ jobs:
         id: assets
         run: |
           echo "ASSETS=$(find . -name '*.md' -print | tr '\n' ' ')" >> $GITHUB_OUTPUT
-          for file in $ASSETS; do
-            echo "Processing $file"
-          done
+          echo "ASSETS=$(find . -name '*.md' -printf '%f\n')"
       - name: Use files in another step
         run: |
           echo "Files found: ${{ steps.assets.outputs.ASSETS }}"
@@ -73,11 +71,13 @@ jobs:
           PACKAGE_VERSION: ${{ steps.ver.outputs.PkgVersion }}
           OCELOT_VERSION: ${{ steps.xml.outputs.OcelotRefVer }}
         with:
-          tag_name: 0.0.3 # Name of a tag. defaults to github.ref_name
+          tag_name: 0.0.4 # Name of a tag. defaults to github.ref_name
           body: |
             ## Version [${{ env.PACKAGE_VERSION }}](https://www.nuget.org/packages/Ocelot.Testing/${{ env.PACKAGE_VERSION }})
             - Ocelot dependency package: v[${{ env.OCELOT_VERSION }}](https://www.nuget.org/packages/Ocelot/${{ env.OCELOT_VERSION }})
             - For Ocelot release: [${{ env.OCELOT_VERSION }}](https://github.com/ThreeMammals/Ocelot/releases/tag/${{ env.OCELOT_VERSION }})
-          files: ${{ steps.assets.outputs.ASSETS }}
+          #files: ${{ steps.assets.outputs.ASSETS }}
+          files: |
+            *.md
           draft: false
           prerelease: false
