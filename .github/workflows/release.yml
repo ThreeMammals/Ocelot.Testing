@@ -2,8 +2,6 @@
 name: Release Package
 on:
   push:
-    branches:
-      - main
     tags:
       - 'v*' # Push events to matching v*, i.e. v1.0, v20.15.10
 jobs:
@@ -64,18 +62,19 @@ jobs:
         run: dotnet build ./src/Ocelot.Testing.csproj --configuration Release --no-restore
       - name: Pack project
         run: dotnet pack ./src/Ocelot.Testing.csproj --configuration Release --output ./packages
-      # - name: Publish to GitHub Packages
-      #   run: dotnet nuget push ./packages/*.nupkg --source "https://nuget.pkg.github.com/ThreeMammals/index.json" --api-key ${{ secrets.GITHUB_TOKEN }} --skip-duplicate
-      # - name: Publish to NuGet
-      #   run: dotnet nuget push ./packages/*.nupkg --source "https://api.nuget.org/v3/index.json" --api-key ${{ secrets.NUGET_API_KEY_2025 }} --skip-duplicate
-      - name: Find assets
-        id: assets
-        run: |
-          echo "ASSETS=$(find packages/*.* -print | tr '\n' ' ')" >> $GITHUB_OUTPUT
-          echo "ASSETS=$(find packages/ -name '*.*pkg' -printf '%f\n')"
-      - name: Use files in another step
-        run: |
-          echo "Files found: ${{ steps.assets.outputs.ASSETS }}"
+      - name: Publish to GitHub Packages
+        run: dotnet nuget push ./packages/*.nupkg --source "https://nuget.pkg.github.com/ThreeMammals/index.json" --api-key ${{ secrets.GITHUB_TOKEN }} --skip-duplicate
+      - name: Publish to NuGet
+        run: dotnet nuget push ./packages/*.nupkg --source "https://api.nuget.org/v3/index.json" --api-key ${{ secrets.NUGET_API_KEY_2025 }} --skip-duplicate
+
+      # - name: Find assets
+      #   id: assets
+      #   run: |
+      #     echo "ASSETS=$(find packages/*.* -print | tr '\n' ' ')" >> $GITHUB_OUTPUT
+      #     echo "ASSETS=$(find packages/ -name '*.*pkg' -printf '%f\n')"
+      # - name: Use files in another step
+      #   run: |
+      #     echo "Files found: ${{ steps.assets.outputs.ASSETS }}"
 
       - name: GitHub Release
         uses: softprops/action-gh-release@v2
@@ -83,7 +82,7 @@ jobs:
           PACKAGE_VERSION: ${{ steps.ver.outputs.PkgVersion }}
           OCELOT_VERSION: ${{ steps.xml.outputs.OcelotRefVer }}
         with:
-          tag_name: 0.0.5 # Name of a tag. defaults to github.ref_name
+          # tag_name: 0.0.5 # Name of a tag. defaults to github.ref_name
           body: |
             ## Version [${{ env.PACKAGE_VERSION }}](https://www.nuget.org/packages/Ocelot.Testing/${{ env.PACKAGE_VERSION }})
             - Ocelot dependency package: v[${{ env.OCELOT_VERSION }}](https://www.nuget.org/packages/Ocelot/${{ env.OCELOT_VERSION }})
