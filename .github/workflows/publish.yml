@@ -1,13 +1,11 @@
-name: Publish .NET Package
-
+# Publishes beta-versions only
+name: Publish Package
 on:
   push:
     branches:
       - main
-    tags:
-      - 'v*'  # Runs when a new version tag is pushed
 jobs:
-  build-pack-publish:
+  build:
     runs-on: ubuntu-latest
     permissions:
       packages: write
@@ -38,8 +36,8 @@ jobs:
       - name: Pack project
         run: dotnet pack ./src/Ocelot.Testing.csproj --configuration Release --output ./packages
 
-      - name: Publish to GitHub Packages
-        run: dotnet nuget push ./packages/*.nupkg --source "https://nuget.pkg.github.com/ThreeMammals/index.json" --api-key ${{ secrets.GITHUB_TOKEN }} --skip-duplicate
+      # - name: Publish to GitHub Packages
+      #   run: dotnet nuget push ./packages/*.nupkg --source "https://nuget.pkg.github.com/ThreeMammals/index.json" --api-key ${{ secrets.GITHUB_TOKEN }} --skip-duplicate
 
-      - name: Publish to NuGet
-        run: dotnet nuget push ./packages/*.nupkg --source "https://api.nuget.org/v3/index.json" --api-key ${{ secrets.NUGET_API_KEY_2025 }} --skip-duplicate
+      # - name: Publish to NuGet
+      #   run: dotnet nuget push ./packages/*.nupkg --source "https://api.nuget.org/v3/index.json" --api-key ${{ secrets.NUGET_API_KEY_2025 }} --skip-duplicate

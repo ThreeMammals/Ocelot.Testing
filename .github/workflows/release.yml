@@ -1,0 +1,51 @@
+# Releases non-beta versions, without 'beta*' suffix
+name: Release Package
+on:
+  push:
+    branches:
+      - main
+    # Sequence of patterns matched against refs/tags
+    tags:
+      - 'v*' # Push events to matching v*, i.e. v1.0, v20.15.10
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      # - name: Setup .NET
+      #   uses: actions/setup-dotnet@v4
+      #   with:
+      #     dotnet-version: |
+      #       8.0.x
+      #       9.0.x
+
+      - name: .NET Info
+        run: dotnet --info
+
+      - name: Read XML with PowerShell
+        id: getxml
+        run: |
+          [xml]$xml = Get-Content ./src/Ocelot.Testing.csproj
+          $value_Version = $xml.SelectSingleNode("//Project/PropertyGroup/Version").InnerText
+          echo "::set-output name=Version::$value_Version"
+
+      - name: Use extracted value
+        run: |
+          echo "Extracted value: ${{ steps.getxml.outputs.Version }}"
+
+      # - name: Create GitHub Release
+      #   uses: actions/create-release@v1
+      #   env:
+      #     GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }} # This token is provided by Actions, you do not need to create your own token
+      #   with:
+      #     tag_name: ${{ github.ref }}
+      #     release_name: Release ${{ github.ref }}
+      #     # body_path: ReleaseNotes.md
+      #     body: |
+      #       ## Version [24.0.0](https://www.nuget.org/packages/Ocelot.Testing/24.0.0-beta2)
+      #       - Ocelot dependency package: v[24.0.0](https://www.nuget.org/packages/Ocelot/24.0.0)
+      #       - For Ocelot release: [24.0.0](https://github.com/ThreeMammals/Ocelot/releases/tag/24.0.0)
+      #     draft: false
+      #     prerelease: false
