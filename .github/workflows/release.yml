@@ -57,35 +57,27 @@ jobs:
           xml_value=$(xmllint --xpath "string(//Project/PropertyGroup/Version)" ./src/Ocelot.Testing.csproj)
           echo "Replaced Version: $xml_value"
           echo "PkgVersion=$xml_value" >> $GITHUB_OUTPUT
-      # - name: Create GitHub Release
-      #   uses: actions/create-release@v1
-      #   env:
-      #     GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }} # This token is provided by Actions, you do not need to create your own token
-      #     PACKAGE_VERSION: ${{ steps.ver.outputs.PkgVersion }}
-      #     OCELOT_VERSION: ${{ steps.xml.outputs.OcelotRefVer }}
-      #   with:
-      #     tag_name: 0.0.2 # ${{ github.ref }}
-      #     release_name: Release ${{ github.ref }}
-      #     #body_path: ReleaseNotes.md
-      #     body: |
-      #       ## Version [${{ env.PACKAGE_VERSION }}](https://www.nuget.org/packages/Ocelot.Testing/${{ env.PACKAGE_VERSION }})
-      #       - Ocelot dependency package: v[${{ env.OCELOT_VERSION }}](https://www.nuget.org/packages/Ocelot/${{ env.OCELOT_VERSION }})
-      #       - For Ocelot release: [${{ env.OCELOT_VERSION }}](https://github.com/ThreeMammals/Ocelot/releases/tag/${{ env.OCELOT_VERSION }})
-      #     draft: false
-      #     prerelease: false
+      - name: Find assets
+        id: assets
+        run: |
+          echo "ASSETS=$(find . -name '*.md' -print | tr '\n' ' ')" >> $GITHUB_OUTPUT
+          for file in $ASSETS; do
+            echo "Processing $file"
+          done
+      - name: Use files in another step
+        run: |
+          echo "Files found: ${{ steps.assets.outputs.ASSETS }}"
       - name: GitHub Release
         uses: softprops/action-gh-release@v2
         env:
           PACKAGE_VERSION: ${{ steps.ver.outputs.PkgVersion }}
           OCELOT_VERSION: ${{ steps.xml.outputs.OcelotRefVer }}
         with:
-          tag_name: 0.0.2 # Name of a tag. defaults to github.ref_name
+          tag_name: 0.0.3 # Name of a tag. defaults to github.ref_name
           body: |
             ## Version [${{ env.PACKAGE_VERSION }}](https://www.nuget.org/packages/Ocelot.Testing/${{ env.PACKAGE_VERSION }})
             - Ocelot dependency package: v[${{ env.OCELOT_VERSION }}](https://www.nuget.org/packages/Ocelot/${{ env.OCELOT_VERSION }})
             - For Ocelot release: [${{ env.OCELOT_VERSION }}](https://github.com/ThreeMammals/Ocelot/releases/tag/${{ env.OCELOT_VERSION }})
-          # files: |
-          #   Release.txt
-          #   LICENSE
+          files: ${{ steps.assets.outputs.ASSETS }}
           draft: false
           prerelease: false
