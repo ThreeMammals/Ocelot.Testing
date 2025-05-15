@@ -27,14 +27,14 @@ jobs:
       - name: .NET Info
         run: dotnet --info
 
-      - name: Restore dependencies
-        run: dotnet restore ./Ocelot.Testing.sln
+      # - name: Restore dependencies
+      #   run: dotnet restore ./Ocelot.Testing.sln
 
-      - name: Build project
-        run: dotnet build ./src/Ocelot.Testing.csproj --configuration Release --no-restore
+      # - name: Build project
+      #   run: dotnet build ./src/Ocelot.Testing.csproj --configuration Release --no-restore
 
-      - name: Pack project
-        run: dotnet pack ./src/Ocelot.Testing.csproj --configuration Release --output ./packages
+      # - name: Pack project
+      #   run: dotnet pack ./src/Ocelot.Testing.csproj --configuration Release --output ./packages
 
       # - name: Publish to GitHub Packages
       #   run: dotnet nuget push ./packages/*.nupkg --source "https://nuget.pkg.github.com/ThreeMammals/index.json" --api-key ${{ secrets.GITHUB_TOKEN }} --skip-duplicate
