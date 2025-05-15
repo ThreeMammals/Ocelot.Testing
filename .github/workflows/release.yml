@@ -24,16 +24,38 @@ jobs:
       - name: .NET Info
         run: dotnet --info
 
-      - name: Read XML with PowerShell
-        id: getxml
+      - name: Install libxml2
         run: |
-          [xml]$xml = Get-Content ./src/Ocelot.Testing.csproj
-          $value_Version = $xml.SelectSingleNode("//Project/PropertyGroup/Version").InnerText
-          echo "::set-output name=Version::$value_Version"
-
-      - name: Use extracted value
+          sudo apt update
+          sudo apt install libxml2-utils
+          sudo apt install xmlstarlet
+      - name: Read XML
+        id: xml
         run: |
-          echo "Extracted value: ${{ steps.getxml.outputs.Version }}"
+          xml_value=$(xmllint --xpath "string(//Project/PropertyGroup/Version)" ./src/Ocelot.Testing.csproj)
+          echo "Version: $xml_value"
+          echo "Version=$xml_value" >> $GITHUB_OUTPUT
+          xml_value=$(xmllint --xpath "string((//Project/ItemGroup)[2]/PackageReference[@Include='Ocelot']/@Version)" ./src/Ocelot.Testing.csproj)
+          echo "Ocelot Ref Ver: $xml_value"
+          echo "OcelotRefVer=$xml_value" >> $GITHUB_OUTPUT
+      - name: Replace Version
+        run: |
+          echo "Version: ${{ steps.xml.outputs.Version }}"
+          echo "Ocelot Ref Ver: ${{ steps.xml.outputs.OcelotRefVer }}"
+          s_Version="${{ steps.xml.outputs.Version }}"
+          if [[ "$s_Version" == *-* ]]; then
+            echo "String contains '-'"
+            first_part=$(echo "$s_Version" | cut -d'-' -f1)
+            echo "First part: $first_part"
+            new_value=$first_part
+          else
+            new_value=$s_Version
+          fi
+          echo "Going to replace version -> $new_value"
+          xmlstarlet ed -L -u "//Project/PropertyGroup/Version" -v "$new_value" ./src/Ocelot.Testing.csproj
+          xml_value=$(xmllint --xpath "string(//Project/PropertyGroup/Version)" ./src/Ocelot.Testing.csproj)
+          echo "Replaced Version: $xml_value"
+          echo "PkgVersion=$xml_value" >> $GITHUB_OUTPUT
 
       # - name: Create GitHub Release
       #   uses: actions/create-release@v1
