@@ -6,7 +6,7 @@
     <Nullable>enable</Nullable>
     <!--Package properties-->
     <PackageId>Ocelot.Testing</PackageId>
-    <Version>24.0.0-beta3</Version>
+    <Version>24.0.1-beta.1</Version>
     <Authors>Raman Maksimchuk</Authors>
     <Company>Three Mammals</Company>
     <Product>Ocelot Gateway</Product>
@@ -41,17 +41,17 @@
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="Ocelot" Version="24.0.0" />
+    <PackageReference Include="Ocelot" Version="24.0.1" />
     <PackageReference Include="Shouldly" Version="4.3.0" />
   </ItemGroup>
 
   <!-- Conditionally obtain references for the net 8.0 target -->
   <ItemGroup Condition=" '$(TargetFramework)' == 'net8.0' ">
-    <PackageReference Include="Microsoft.AspNetCore.TestHost" Version="8.0.16" />
+    <PackageReference Include="Microsoft.AspNetCore.TestHost" Version="8.0.19" />
   </ItemGroup>
   <!-- Conditionally obtain references for the net 9.0 target -->
   <ItemGroup Condition=" '$(TargetFramework)' == 'net9.0' ">
-    <PackageReference Include="Microsoft.AspNetCore.TestHost" Version="9.0.5" />
+    <PackageReference Include="Microsoft.AspNetCore.TestHost" Version="9.0.8" />
   </ItemGroup>
 
 </Project>
