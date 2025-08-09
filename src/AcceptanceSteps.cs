@@ -14,6 +14,7 @@ using Shouldly;
 using System.Diagnostics;
 using System.Net;
 using System.Net.Http.Headers;
+using System.Runtime.CompilerServices;
 using CookieHeaderValue = Microsoft.Net.Http.Headers.CookieHeaderValue;
 using MediaTypeHeaderValue = System.Net.Http.Headers.MediaTypeHeaderValue;
 
@@ -52,7 +53,7 @@ public class AcceptanceSteps : IDisposable
 
     protected virtual FileConfiguration GivenConfiguration(params FileRoute[] routes) => new()
     {
-        Routes = new(routes),
+        Routes = [.. routes],
     };
 
     protected static FileRoute GivenDefaultRoute(int port) => GivenRoute(port);
@@ -292,27 +293,32 @@ public class AcceptanceSteps : IDisposable
         watcher.Stop();
     }
 
+    public void ThenTheResponseBody([CallerMemberName] string testName = "")
+        => ThenTheResponseBodyShouldBe(testName);
+    public Task ThenTheResponseBodyAsync([CallerMemberName] string testName = "")
+        => ThenTheResponseBodyShouldBeAsync(testName);
+
     public void ThenTheResponseBodyShouldBe(string expectedBody)
-        => response.ShouldNotBeNull().Content.ReadAsStringAsync().GetAwaiter().GetResult().ShouldBe(expectedBody);
-    public async Task ThenTheResponseBodyShouldBeAsync(string expectedBody)
-    {
-        response.ShouldNotBeNull();
-        var body = await response.Content.ReadAsStringAsync();
-        body.ShouldBe(expectedBody);
-    }
+        => response.ShouldNotBeNull()
+        .Content.ReadAsStringAsync().GetAwaiter().GetResult().ShouldBe(expectedBody);
+    public Task ThenTheResponseBodyShouldBeAsync(string expectedBody)
+        => response.ShouldNotBeNull()
+        .Content.ReadAsStringAsync()
+        .ContinueWith(t => t.Result.ShouldBe(expectedBody));
 
     public void ThenTheResponseBodyShouldBe(string expectedBody, string customMessage)
-        => response.ShouldNotBeNull().Content.ReadAsStringAsync().GetAwaiter().GetResult().ShouldBe(expectedBody, customMessage);
-    public async Task ThenTheResponseBodyShouldBeAsync(string expectedBody, string customMessage)
-    {
-        response.ShouldNotBeNull();
-        var body = await response.Content.ReadAsStringAsync();
-        body.ShouldBe(expectedBody, customMessage);
-    }
+        => response.ShouldNotBeNull()
+        .Content.ReadAsStringAsync().GetAwaiter().GetResult().ShouldBe(expectedBody, customMessage);
+    public Task ThenTheResponseBodyShouldBeAsync(string expectedBody, string customMessage)
+        => response.ShouldNotBeNull()
+        .Content.ReadAsStringAsync()
+        .ContinueWith(t => t.Result.ShouldBe(expectedBody, customMessage));
 
     public void ThenTheContentLengthIs(int expected)
         => response.ShouldNotBeNull().Content.Headers.ContentLength.ShouldBe(expected);
 
+    public void ThenTheStatusCodeShouldBeOK()
+        => ThenTheStatusCodeShouldBe(HttpStatusCode.OK);
     public void ThenTheStatusCodeShouldBe(HttpStatusCode expected)
         => response.ShouldNotBeNull().StatusCode.ShouldBe(expected);
     public void ThenTheStatusCodeShouldBe(int expected)
