@@ -24,7 +24,7 @@ public static class FileRouteExtensions
 
     public static FileRoute WithUpstreamHeaderTransform(this FileRoute route, params KeyValuePair<string, string>[] pairs)
     {
-        route.UpstreamHeaderTransform = new(pairs);
+        route.UpstreamHeaderTransform = new Dictionary<string, string>(pairs);
         return route;
     }
     public static FileRoute WithUpstreamHeaderTransform(this FileRoute route, string key, string value)
