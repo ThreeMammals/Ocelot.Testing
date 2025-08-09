@@ -14,7 +14,7 @@ namespace Ocelot.Testing;
 // TODO 2. Develop async versions for each sync method
 public class ServiceHandler : IDisposable
 {
-    private readonly List<IWebHost> _hosts = new();
+    private readonly List<IWebHost> _hosts = [];
 
     public void Dispose()
     {
@@ -123,7 +123,7 @@ public class ServiceHandler : IDisposable
         Action<IApplicationBuilder>? configureApp,
         Action<IWebHostBuilder>? configureWebHost)
     {
-        var builder = TestHostBuilder.Create().UseUrls(baseUrl);
+        var builder = TestHostBuilder.Create().UseUrls(baseUrl).UseKestrel();
         if (configureDelegate != null) builder.ConfigureAppConfiguration(configureDelegate);
         if (configureLogging != null) builder.ConfigureLogging(configureLogging);
         if (configureServices != null) builder.ConfigureServices(configureServices);
@@ -149,7 +149,7 @@ public class ServiceHandler : IDisposable
         Action<IApplicationBuilder>? configureApp,
         Action<IWebHostBuilder>? configureWebHost)
     {
-        var builder = TestHostBuilder.Create().UseUrls(baseUrl);
+        var builder = TestHostBuilder.Create().UseUrls(baseUrl).UseKestrel();
         if (configureDelegate != null) builder.ConfigureAppConfiguration(configureDelegate);
         if (configureLogging != null) builder.ConfigureLogging(configureLogging);
         if (configureServices != null) builder.ConfigureServices(configureServices);
