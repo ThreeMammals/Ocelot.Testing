@@ -4,40 +4,30 @@
     <TargetFrameworks>net8.0;net9.0</TargetFrameworks>
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
+    <GeneratePackageOnBuild>False</GeneratePackageOnBuild>
+    <IncludeSymbols>True</IncludeSymbols>
+    <SymbolPackageFormat>snupkg</SymbolPackageFormat>
     <!--Package properties-->
+    <Version>24.0.1-beta.2</Version>
     <PackageId>Ocelot.Testing</PackageId>
-    <Version>24.0.1-beta.1</Version>
+    <PackageDescription>A shared library for testing the Ocelot core library and its extension packages, including both acceptance and unit tests</PackageDescription>
+    <PackageReleaseNotes>https://github.com/ThreeMammals/Ocelot.Testing/releases</PackageReleaseNotes>
+    <PackageIcon>ocelot_icon.png</PackageIcon>
+    <PackageReadmeFile>README.md</PackageReadmeFile>
+    <PackageLicenseFile>LICENSE</PackageLicenseFile>
+    <PackageTags>dotnet;ocelot</PackageTags>
+    <PackageProjectUrl>https://github.com/ThreeMammals/Ocelot</PackageProjectUrl>
+    <RepositoryUrl>https://github.com/ThreeMammals/Ocelot.Testing</RepositoryUrl>
     <Authors>Raman Maksimchuk</Authors>
     <Company>Three Mammals</Company>
     <Product>Ocelot Gateway</Product>
     <Copyright>© 2025 Three Mammals. MIT licensed OSS</Copyright>
-    <PackageDescription>Shared library for testing Ocelot head library and extension packages, including acceptance and unit tests</PackageDescription>
-    <RepositoryUrl>https://github.com/ThreeMammals/Ocelot.Testing</RepositoryUrl>
-    <GeneratePackageOnBuild>True</GeneratePackageOnBuild>
-    <PackageIcon>ocelot_icon.png</PackageIcon>
-    <PackageReadmeFile>README.md</PackageReadmeFile>
-    <PackageProjectUrl>https://github.com/ThreeMammals/Ocelot</PackageProjectUrl>
-    <PackageLicenseFile>LICENSE</PackageLicenseFile>
-    <IncludeSymbols>True</IncludeSymbols>
-    <SymbolPackageFormat>snupkg</SymbolPackageFormat>
   </PropertyGroup>
 
   <ItemGroup>
-    <None Include="..\LICENSE">
-      <Pack>True</Pack>
-      <PackagePath>\</PackagePath>
-      <Link>.artifacts\LICENSE</Link>
-    </None>
-    <None Include="..\ocelot_icon.png">
-      <Pack>True</Pack>
-      <PackagePath>\</PackagePath>
-      <Link>.artifacts\ocelot_icon.png</Link>
-    </None>
-    <None Include="..\README.md">
-      <Pack>True</Pack>
-      <PackagePath>\</PackagePath>
-      <Link>.artifacts\README.md</Link>
-    </None>
+    <None Include="..\LICENSE" Pack="True" PackagePath="\" Link=".artifacts\LICENSE" />
+    <None Include="..\ocelot_icon.png" Pack="True" PackagePath="\" Link=".artifacts\ocelot_icon.png" />
+    <None Include="..\README.md" Pack="True" PackagePath="\" Link=".artifacts\README.md" />
   </ItemGroup>
 
   <ItemGroup>
