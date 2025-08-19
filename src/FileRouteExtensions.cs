@@ -18,7 +18,7 @@ public static class FileRouteExtensions
 
     public static FileRoute WithMethods(this FileRoute route, params string[] methods)
     {
-        route.UpstreamHttpMethod.AddRange(methods);
+        route.UpstreamHttpMethod = [.. methods];
         return route;
     }
 

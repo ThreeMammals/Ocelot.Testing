@@ -58,14 +58,16 @@ public class AcceptanceSteps : IDisposable
 
     protected static FileRoute GivenDefaultRoute(int port) => GivenRoute(port);
     protected static FileRoute GivenCatchAllRoute(int port) => GivenRoute(port, "/{everything}", "/{everything}");
-    protected static FileRoute GivenRoute(int port, string? upstream = null, string? downstream = null) => new()
+    protected static FileRoute GivenRoute(int port, string? upstream = null, string? downstream = null)
     {
-        DownstreamPathTemplate = downstream ?? "/",
-        DownstreamHostAndPorts = [ Localhost(port) ],
-        DownstreamScheme = Uri.UriSchemeHttp,
-        UpstreamPathTemplate = upstream ?? "/",
-        UpstreamHttpMethod = [HttpMethods.Get],
-    };
+        var r = Activator.CreateInstance<FileRoute>();
+        r.DownstreamHostAndPorts.Add(Localhost(port));
+        r.DownstreamPathTemplate = downstream ?? "/";
+        r.DownstreamScheme = Uri.UriSchemeHttp;
+        r.UpstreamHttpMethod.Add(HttpMethods.Get);
+        r.UpstreamPathTemplate = upstream ?? "/";
+        return r;
+    }
 
     public void GivenThereIsAConfiguration(FileConfiguration fileConfiguration)
         => GivenThereIsAConfiguration(fileConfiguration, ocelotConfigFileName);
