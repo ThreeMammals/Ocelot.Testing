@@ -64,8 +64,9 @@ public class AcceptanceSteps : IDisposable
         r.DownstreamHostAndPorts.Add(Localhost(port));
         r.DownstreamPathTemplate = downstream ?? "/";
         r.DownstreamScheme = Uri.UriSchemeHttp;
-        r.UpstreamHttpMethod.Add(HttpMethods.Get);
         r.UpstreamPathTemplate = upstream ?? "/";
+        IList<string> uhmList = r.UpstreamHttpMethod;
+        uhmList.Add(HttpMethods.Get);
         return r;
     }
 
