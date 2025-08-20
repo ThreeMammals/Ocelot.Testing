@@ -8,7 +8,7 @@
     <IncludeSymbols>True</IncludeSymbols>
     <SymbolPackageFormat>snupkg</SymbolPackageFormat>
     <!--Package properties-->
-    <Version>24.0.2-beta.2</Version>
+    <Version>24.0.2-beta.3</Version>
     <PackageId>Ocelot.Testing</PackageId>
     <PackageDescription>A shared library for testing the Ocelot core library and its extension packages, including both acceptance and unit tests</PackageDescription>
     <PackageReleaseNotes>https://github.com/ThreeMammals/Ocelot.Testing/releases</PackageReleaseNotes>
@@ -31,16 +31,18 @@
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="Ocelot" Version="24.0.1" />
     <PackageReference Include="Shouldly" Version="4.3.0" />
+    <PackageReference Include="System.Text.Json" Version="9.0.8" />
   </ItemGroup>
 
   <!-- Conditionally obtain references for the net 8.0 target -->
   <ItemGroup Condition=" '$(TargetFramework)' == 'net8.0' ">
+    <PackageReference Include="Microsoft.AspNetCore.Mvc.NewtonsoftJson" Version="8.0.19" />
     <PackageReference Include="Microsoft.AspNetCore.TestHost" Version="8.0.19" />
   </ItemGroup>
   <!-- Conditionally obtain references for the net 9.0 target -->
   <ItemGroup Condition=" '$(TargetFramework)' == 'net9.0' ">
+    <PackageReference Include="Microsoft.AspNetCore.Mvc.NewtonsoftJson" Version="9.0.8" />
     <PackageReference Include="Microsoft.AspNetCore.TestHost" Version="9.0.8" />
   </ItemGroup>
 

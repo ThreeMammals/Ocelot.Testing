@@ -6,15 +6,23 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
-using Newtonsoft.Json;
-using Ocelot.Configuration.File;
-using Ocelot.DependencyInjection;
-using Ocelot.Middleware;
+using Microsoft.Extensions.Options;
+
+//using Newtonsoft.Json;
+//using Ocelot.Configuration.File;
+//using Ocelot.DependencyInjection;
+//using Ocelot.Middleware;
 using Shouldly;
+using System.Collections;
 using System.Diagnostics;
 using System.Net;
 using System.Net.Http.Headers;
+using System.Reflection;
 using System.Runtime.CompilerServices;
+using System.Text.Encodings.Web;
+using System.Text.Json;
+using System.Text.Unicode;
+using System.Xml;
 using CookieHeaderValue = Microsoft.Net.Http.Headers.CookieHeaderValue;
 using MediaTypeHeaderValue = System.Net.Http.Headers.MediaTypeHeaderValue;
 
@@ -36,7 +44,7 @@ public class AcceptanceSteps : IDisposable
     {
         _testId = Guid.NewGuid();
         random = new Random();
-        ocelotConfigFileName = $"{_testId:N}-{ConfigurationBuilderExtensions.PrimaryConfigFile}";
+        ocelotConfigFileName = $"{_testId:N}-ocelot.json"; // {ConfigurationBuilderExtensions.PrimaryConfigFile}";
         Files = [ocelotConfigFileName];
         Folders = [];
         handler = new();
@@ -46,56 +54,100 @@ public class AcceptanceSteps : IDisposable
     protected List<string> Folders { get; }
     protected string TestID { get => _testId.ToString("N"); }
 
-    protected static FileHostAndPort Localhost(int port) => new("localhost", port);
+    protected virtual /*FileHostAndPort*/object? Localhost(int port)
+    {
+        // return new("localhost", port);
+        return Ocelot.CreateFileHostAndPort("localhost", port, out Type type);
+    }
+
     protected static string DownstreamUrl(int port) => DownstreamUrl(port, Uri.UriSchemeHttp);
     protected static string DownstreamUrl(int port, string scheme) => $"{scheme ?? Uri.UriSchemeHttp}://localhost:{port}";
     protected static string LoopbackLocalhostUrl(int port, int loopbackIndex = 0) => $"{Uri.UriSchemeHttp}://127.0.0.{++loopbackIndex}:{port}";
 
-    protected virtual FileConfiguration GivenConfiguration(params FileRoute[] routes) => new()
+    protected virtual /*FileConfiguration*/object? GivenConfiguration(params /*FileRoute*/object[] routes)
     {
-        Routes = [.. routes],
-    };
+        object? c = Ocelot.CreateFileConfiguration(out Type type);
+        PropertyInfo? property = type.GetProperty("Routes");
+        if (property?.GetValue(c) is IList list)
+            foreach (var route in routes)
+                list.Add(route);
+        return c;
+    }
 
-    protected static FileRoute GivenDefaultRoute(int port) => GivenRoute(port);
-    protected static FileRoute GivenCatchAllRoute(int port) => GivenRoute(port, "/{everything}", "/{everything}");
-    protected static FileRoute GivenRoute(int port, string? upstream = null, string? downstream = null)
+    protected virtual /*FileRoute*/object? GivenDefaultRoute(int port) => GivenRoute(port);
+    protected virtual /*FileRoute*/object? GivenCatchAllRoute(int port) => GivenRoute(port, "/{everything}", "/{everything}");
+    protected virtual /*FileRoute*/object? GivenRoute(int port, string? upstream = null, string? downstream = null)
     {
-        var r = Activator.CreateInstance<FileRoute>();
-        r.DownstreamHostAndPorts.Add(Localhost(port));
-        r.DownstreamPathTemplate = downstream ?? "/";
-        r.DownstreamScheme = Uri.UriSchemeHttp;
-        r.UpstreamPathTemplate = upstream ?? "/";
-        IList<string> uhmList = r.UpstreamHttpMethod;
-        uhmList.Add(HttpMethods.Get);
+        object? r = Ocelot.CreateFileRoute(out Type type);
+
+        //r.DownstreamHostAndPorts.Add(Localhost(port));
+        PropertyInfo? property = type.GetProperty("DownstreamHostAndPorts");
+        if (property?.GetValue(r) is IList downstreamHostAndPorts)
+            downstreamHostAndPorts.Add(Localhost(port));
+
+        //r.DownstreamPathTemplate = downstream ?? "/";
+        property = type.GetProperty("DownstreamPathTemplate");
+        property?.SetValue(r, downstream ?? "/");
+
+        //r.DownstreamScheme = Uri.UriSchemeHttp;
+        property = type.GetProperty("DownstreamScheme");
+        property?.SetValue(r, Uri.UriSchemeHttp);
+
+        //r.UpstreamPathTemplate = upstream ?? "/";
+        property = type.GetProperty("UpstreamPathTemplate");
+        property?.SetValue(r, upstream ?? "/");
+
+        //r.UpstreamHttpMethod.Add(HttpMethods.Get);
+        property = type.GetProperty("UpstreamHttpMethod");
+        if (property?.GetValue(r) is IList upstreamHttpMethod)
+            upstreamHttpMethod.Add(HttpMethods.Get);
+
         return r;
     }
 
-    public void GivenThereIsAConfiguration(FileConfiguration fileConfiguration)
+    public virtual void GivenThereIsAConfiguration(/*FileConfiguration*/object fileConfiguration)
         => GivenThereIsAConfiguration(fileConfiguration, ocelotConfigFileName);
-    public void GivenThereIsAConfiguration(FileConfiguration from, string toFile)
+    public virtual void GivenThereIsAConfiguration(/*FileConfiguration*/object from, string toFile)
     {
         var json = SerializeJson(from, ref toFile);
         File.WriteAllText(toFile, json);
     }
-    public Task GivenThereIsAConfigurationAsync(FileConfiguration from, string toFile)
+    public virtual Task GivenThereIsAConfigurationAsync(/*FileConfiguration*/object from, string toFile)
     {
         var json = SerializeJson(from, ref toFile);
         return File.WriteAllTextAsync(toFile, json);
     }
-    protected string SerializeJson(FileConfiguration from, ref string toFile)
+    protected virtual string SerializeJson(/*FileConfiguration*/object from, ref string toFile)
     {
         toFile ??= ocelotConfigFileName;
         Files.Add(toFile); // register for disposing
-        return JsonConvert.SerializeObject(from, Formatting.Indented);
+
+        // return JsonConvert.SerializeObject(from, Formatting.Indented);
+        string json = JsonSerializer.Serialize(from, JsonWebIndented);
+        return json;
     }
 
+    public readonly static JsonSerializerOptions JsonWebIndented = new()
+    {
+        Encoder = JavaScriptEncoder.Create(UnicodeRanges.All), // Avoid escaping non-ASCII
+        PropertyNamingPolicy = JsonNamingPolicy.CamelCase,     // Use camelCase for web
+        WriteIndented = true,                                  // Not compact output for better readability
+        PropertyNameCaseInsensitive = true                     // Optional: for deserialization
+    };
+
     #region GivenOcelotIsRunning
-    public void WithBasicConfiguration(WebHostBuilderContext hosting, IConfigurationBuilder config) => config
-        .SetBasePath(hosting.HostingEnvironment.ContentRootPath)
-        .AddOcelot(ocelotConfigFileName, false, false);
-    public static void WithAddOcelot(IServiceCollection services) => services.AddOcelot();
-    public static void WithUseOcelot(IApplicationBuilder app) => app.UseOcelot().Wait();
-    public static Task<IApplicationBuilder> WithUseOcelotAsync(IApplicationBuilder app) => app.UseOcelot();
+    public void WithBasicConfiguration(WebHostBuilderContext hosting, IConfigurationBuilder config)
+    {
+        config.SetBasePath(hosting.HostingEnvironment.ContentRootPath);
+        //config.AddOcelot(ocelotConfigFileName, false, false);
+        config.AddJsonFile(ocelotConfigFileName, false, false);
+    }
+
+    //public static void WithAddOcelot(IServiceCollection services) => services.AddOcelot();
+    public static void WithAddOcelot(IServiceCollection services) => Ocelot.AddOcelot(services); // services.AddOcelot();
+
+    public static void WithUseOcelot(IApplicationBuilder app) => Ocelot.UseOcelot(app).Wait(); // app.UseOcelot().Wait();
+    public static Task<IApplicationBuilder> WithUseOcelotAsync(IApplicationBuilder app) => Ocelot.UseOcelot(app); // app.UseOcelot();
 
     public int GivenOcelotIsRunning()
         => GivenOcelotIsRunning(null, null, null, null, null, null);
