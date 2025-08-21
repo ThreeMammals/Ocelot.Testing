@@ -1,7 +1,6 @@
-﻿//using Ocelot.DependencyInjection;
-namespace Ocelot.Testing;
+﻿namespace Ocelot.Testing;
 
-public class FileUnitTest : UnitTest, IDisposable
+public class FileUnit : Unit, IDisposable
 {
     protected string primaryConfigFileName;
     protected string globalConfigFileName;
@@ -9,23 +8,23 @@ public class FileUnitTest : UnitTest, IDisposable
     protected readonly List<string> files;
     protected readonly List<string> folders;
 
-    protected FileUnitTest() : this(null) { }
+    protected FileUnit() : this(null) { }
 
-    protected FileUnitTest(string? folder)
+    protected FileUnit(string? folder)
     {
         folder ??= TestID;
         Directory.CreateDirectory(folder);
-        folders = new() { folder };
+        folders = [folder];
 
         primaryConfigFileName = Path.Combine(folder, /*ConfigurationBuilderExtensions.PrimaryConfigFile*/ "ocelot.json");
         globalConfigFileName = Path.Combine(folder, /*ConfigurationBuilderExtensions.GlobalConfigFile*/ "ocelot.global.json");
         environmentConfigFileName = Path.Combine(folder, string.Format(/*ConfigurationBuilderExtensions.EnvironmentConfigFile*/"ocelot.{0}.json", EnvironmentName()));
-        files = new()
-        {
+        files =
+        [
             primaryConfigFileName,
             globalConfigFileName,
             environmentConfigFileName,
-        };
+        ];
     }
 
     protected virtual string EnvironmentName() => TestID;

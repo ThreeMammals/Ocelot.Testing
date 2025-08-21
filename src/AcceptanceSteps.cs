@@ -6,12 +6,6 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
-using Microsoft.Extensions.Options;
-
-//using Newtonsoft.Json;
-//using Ocelot.Configuration.File;
-//using Ocelot.DependencyInjection;
-//using Ocelot.Middleware;
 using Shouldly;
 using System.Collections;
 using System.Diagnostics;
@@ -22,9 +16,13 @@ using System.Runtime.CompilerServices;
 using System.Text.Encodings.Web;
 using System.Text.Json;
 using System.Text.Unicode;
-using System.Xml;
 using CookieHeaderValue = Microsoft.Net.Http.Headers.CookieHeaderValue;
 using MediaTypeHeaderValue = System.Net.Http.Headers.MediaTypeHeaderValue;
+
+//using Newtonsoft.Json;
+//using Ocelot.Configuration.File;
+//using Ocelot.DependencyInjection;
+//using Ocelot.Middleware;
 
 namespace Ocelot.Testing;
 
@@ -44,7 +42,7 @@ public class AcceptanceSteps : IDisposable
     {
         _testId = Guid.NewGuid();
         random = new Random();
-        ocelotConfigFileName = $"{_testId:N}-ocelot.json"; // {ConfigurationBuilderExtensions.PrimaryConfigFile}";
+        ocelotConfigFileName = $"ocelot-{_testId:N}.json"; // {ConfigurationBuilderExtensions.PrimaryConfigFile}";
         Files = [ocelotConfigFileName];
         Folders = [];
         handler = new();
@@ -121,10 +119,7 @@ public class AcceptanceSteps : IDisposable
     {
         toFile ??= ocelotConfigFileName;
         Files.Add(toFile); // register for disposing
-
-        // return JsonConvert.SerializeObject(from, Formatting.Indented);
-        string json = JsonSerializer.Serialize(from, JsonWebIndented);
-        return json;
+        return JsonSerializer.Serialize(from, JsonWebIndented /*Formatting.Indented*/);
     }
 
     public readonly static JsonSerializerOptions JsonWebIndented = new()
@@ -143,9 +138,7 @@ public class AcceptanceSteps : IDisposable
         config.AddJsonFile(ocelotConfigFileName, false, false);
     }
 
-    //public static void WithAddOcelot(IServiceCollection services) => services.AddOcelot();
     public static void WithAddOcelot(IServiceCollection services) => Ocelot.AddOcelot(services); // services.AddOcelot();
-
     public static void WithUseOcelot(IApplicationBuilder app) => Ocelot.UseOcelot(app).Wait(); // app.UseOcelot().Wait();
     public static Task<IApplicationBuilder> WithUseOcelotAsync(IApplicationBuilder app) => Ocelot.UseOcelot(app); // app.UseOcelot();
 
