@@ -28,10 +28,14 @@ jobs:
           echo 'Removes tags <sub> and </sub>'
           sed -i 's/<\/\?sub>//g' README.md
           cat README.md
-      - name: Install XML tools
+      - name: Install tools
         run: |
           sudo apt update
           sudo apt install libxml2-utils xmlstarlet
+          get_latest_release() {
+            curl --silent "https://api.github.com/repos/$1/releases/latest" | jq -r .tag_name
+          }
+          get_latest_release "ThreeMammals/Ocelot"
       - name: Read XML
         id: xml
         run: |
@@ -41,10 +45,14 @@ jobs:
           xml_value=$(xmllint --xpath "string((//Project/ItemGroup)[2]/PackageReference[@Include='Ocelot']/@Version)" ./src/Ocelot.Testing.csproj)
           echo "Ocelot Ref Ver: $xml_value"
           echo "OcelotRefVer=$xml_value" >> $GITHUB_OUTPUT
+          oc_latest_release=$(curl "https://api.github.com/repos/ThreeMammals/Ocelot/releases/latest" | jq -r .tag_name)
+          echo "Ocelot Ver: $oc_latest_release"
+          echo "OcelotVer=$oc_latest_release" >> $GITHUB_OUTPUT
       - name: Replace Version
         id: ver
         run: |
           echo "Version: ${{ steps.xml.outputs.Version }}"
+          echo "Ocelot Ver: ${{ steps.xml.outputs.OcelotVer }}"
           echo "Ocelot Ref Ver: ${{ steps.xml.outputs.OcelotRefVer }}"
           s_Version="${{ steps.xml.outputs.Version }}"
           if [[ "$s_Version" == *-* ]]; then
@@ -83,13 +91,13 @@ jobs:
         uses: softprops/action-gh-release@v2
         env:
           PACKAGE_VERSION: ${{ steps.ver.outputs.PkgVersion }}
-          OCELOT_VERSION: ${{ steps.xml.outputs.OcelotRefVer }}
+          OCELOT_VERSION: ${{ steps.xml.outputs.OcelotVer }}
         with:
-          # tag_name: 0.0.5 # Name of a tag. defaults to github.ref_name
+          # tag_name: 24.0.2 # Name of a tag. defaults to github.ref_name
           body: |
             ## Version [${{ env.PACKAGE_VERSION }}](https://www.nuget.org/packages/Ocelot.Testing/${{ env.PACKAGE_VERSION }})
-            - Ocelot dependency package: v[${{ env.OCELOT_VERSION }}](https://www.nuget.org/packages/Ocelot/${{ env.OCELOT_VERSION }})
-            - For Ocelot release: [${{ env.OCELOT_VERSION }}](https://github.com/ThreeMammals/Ocelot/releases/tag/${{ env.OCELOT_VERSION }})
+            - Ocelot package: v[${{ env.OCELOT_VERSION }}](https://www.nuget.org/packages/Ocelot/${{ env.OCELOT_VERSION }})
+            - Ocelot release: [${{ env.OCELOT_VERSION }}](https://github.com/ThreeMammals/Ocelot/releases/tag/${{ env.OCELOT_VERSION }})
           files: |
             packages/*.*pkg
           draft: false
