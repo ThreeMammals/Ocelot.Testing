@@ -227,24 +227,41 @@ public class AcceptanceSteps : IDisposable
 
     #region Headers
 
-    public void ThenTheResponseHeaderIs(string key, string value) => ThenTheResponseHeaderExists(key).First().ShouldBe(value);
-    public void ThenTheResponseContentHeaderIs(string key, string value) => ThenTheResponseContentHeaderExists(key).First().ShouldBe(value);
-
-    public IEnumerable<string> ThenTheResponseHeaderExists(string key)
+    public void ThenTheResponseHeaderIs(string key, string value)
     {
-        response.ShouldNotBeNull();
-        response.Headers.Contains(key).ShouldBeTrue();
-        var header = response.Headers.GetValues(key);
+        ThenTheResponseHeaderExists(key);
+        var header = response?.Headers.GetValues(key) ?? [];
         header.Any(string.IsNullOrEmpty).ShouldBeFalse();
-        return header;
+        string.Join(';', header).ShouldBe(value);
     }
-    public IEnumerable<string> ThenTheResponseContentHeaderExists(string key)
+
+    public void ThenTheResponseContentHeaderIs(string key, string value)
+    {
+        ThenTheResponseContentHeaderExists(key);
+        var header = response?.Content.Headers.GetValues(key) ?? [];
+        header.Any(string.IsNullOrEmpty).ShouldBeFalse();
+        string.Join(';', header).ShouldBe(value);
+    }
+
+    public string ThenTheResponseHeaderExists(string key)
+    {
+        response.ShouldNotBeNull().Headers.Contains(key).ShouldBeTrue();
+        var header = response.Headers.GetValues(key);
+        return string.Join(';', header);
+    }
+
+    public void ThenTheResponseHeaderExists(string key, bool exists)
+        => response.ShouldNotBeNull().Headers.Contains(key).ShouldBe(exists);
+
+    public string ThenTheResponseContentHeaderExists(string key)
     {
         response.ShouldNotBeNull().Content.Headers.Contains(key).ShouldBeTrue();
         var header = response.Content.Headers.GetValues(key);
-        header.Any(string.IsNullOrEmpty).ShouldBeFalse();
-        return header;
+        return string.Join(';', header);
     }
+
+    public void ThenTheResponseContentHeaderExists(string key, bool exists)
+        => response.ShouldNotBeNull().Content.Headers.Contains(key).ShouldBe(exists);
     #endregion
 
     public void ThenTheResponseReasonPhraseIs(string expected)
