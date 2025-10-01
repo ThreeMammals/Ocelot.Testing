@@ -45,13 +45,9 @@ public class FileRouteBox<T> : Box<T> where T : class // FileRoute
     public FileRouteBox<T> Methods(params string[] methods)
     {
         //route.UpstreamHttpMethod = [.. methods];
-        var property = Me.GetProperty("UpstreamHttpMethod");
-        IList upstreamHttpMethod = property?.GetValue(Instance) as IList
-            ?? throw new ArgumentNullException(nameof(upstreamHttpMethod));
-        foreach (var method in methods)
-        {
-            upstreamHttpMethod.Add(method);
-        }
+        var property = Me.GetProperty("UpstreamHttpMethod") ?? throw new NullReferenceException("UpstreamHttpMethod");
+        var collection = Activator.CreateInstance(property.PropertyType, (IEnumerable<string>)methods);
+        property.SetValue(Instance, collection);
         return this;
     }
 
