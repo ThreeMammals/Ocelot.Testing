@@ -51,6 +51,7 @@ public class AcceptanceSteps : IDisposable
     protected List<string> Files { get; }
     protected List<string> Folders { get; }
     protected string TestID { get => _testId.ToString("N"); }
+    public HttpClient? OcelotClient => ocelotClient;
 
     protected virtual /*FileHostAndPort*/object? Localhost(int port)
     {
