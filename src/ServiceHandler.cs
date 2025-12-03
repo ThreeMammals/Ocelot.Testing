@@ -6,6 +6,7 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
+using System.Collections.Concurrent;
 using System.Net;
 
 namespace Ocelot.Testing;
@@ -14,16 +15,52 @@ namespace Ocelot.Testing;
 // TODO 2. Develop async versions for each sync method
 public class ServiceHandler : IDisposable
 {
-    private readonly List<IWebHost> _hosts = [];
+    private readonly ConcurrentDictionary<string, IWebHost> _hosts = new();
 
     public void Dispose()
     {
-        _hosts.ForEach(h => h?.Dispose());
+        foreach (var kv in _hosts)
+        {
+            kv.Value?.Dispose();
+        }
         _hosts.Clear();
         GC.SuppressFinalize(this);
     }
 
-    public void GivenThereIsAServiceRunningOn(string baseUrl, RequestDelegate handler)
+    protected Task AddOrStopAsync(string key, IWebHost host)
+    {
+        if (_hosts.TryAdd(key, host))
+            return Task.CompletedTask;
+
+        var h = _hosts.GetOrAdd(key, host);
+        _hosts[key] = host;
+
+        // Shutdown old host
+        return h.StopAsync().ContinueWith(t => h.Dispose(), TaskContinuationOptions.ExecuteSynchronously);
+    }
+
+    public Task ReleasePortAsync(params int[] ports)
+    {
+        List<Task> tasks = new(ports.Length);
+        foreach (int port in ports)
+        {
+            var kv = _hosts.SingleOrDefault(x => new Uri(x.Key).Port == port);
+            if (kv.Key is null || kv.Value is null)
+                continue;
+
+            var host = kv.Value;
+            var task = host.StopAsync()
+                .ContinueWith(t =>
+                {
+                    host.Dispose();
+                    _hosts.TryRemove(kv);
+                });
+            tasks.Add(task);
+        }
+        return Task.WhenAll(tasks);
+    }
+
+    public IWebHost GivenThereIsAServiceRunningOn(string baseUrl, RequestDelegate handler)
     {
         var host = TestHostBuilder.Create()
             .UseUrls(baseUrl)
@@ -32,8 +69,9 @@ public class ServiceHandler : IDisposable
             .UseIISIntegration()
             .Configure(app => app.Run(handler))
             .Build();
-        _hosts.Add(host);
+        AddOrStopAsync(baseUrl, host).Wait();
         host.Start();
+        return host;
     }
 
     public void GivenThereIsAServiceRunningOn(string baseUrl, string basePath, RequestDelegate handler)
@@ -45,7 +83,7 @@ public class ServiceHandler : IDisposable
             .UseIISIntegration()
             .Configure(app => app.UsePathBase(basePath).Run(handler))
             .Build();
-        _hosts.Add(host);
+        AddOrStopAsync(baseUrl, host).Wait();
         host.Start();
     }
 
@@ -59,7 +97,7 @@ public class ServiceHandler : IDisposable
             .ConfigureServices(configureServices)
             .Configure(app => app.UsePathBase(basePath).Run(handler))
             .Build();
-        _hosts.Add(host);
+        AddOrStopAsync(baseUrl, host).Wait();
         host.Start();
     }
 
@@ -73,7 +111,7 @@ public class ServiceHandler : IDisposable
             .UseIISIntegration()
             .Configure(app => app.UsePathBase(basePath).Run(handler))
             .Build();
-        _hosts.Add(host);
+        AddOrStopAsync(baseUrl, host).Wait();
         host.Start();
     }
 
@@ -93,7 +131,7 @@ public class ServiceHandler : IDisposable
             .UseContentRoot(Directory.GetCurrentDirectory())
             .Configure(app => app.UsePathBase(basePath).Run(handler))
             .Build();
-        _hosts.Add(host);
+        AddOrStopAsync(baseUrl, host).Wait();
         host.Start();
     }
 
@@ -130,7 +168,7 @@ public class ServiceHandler : IDisposable
         if (configureApp != null) builder.Configure(configureApp);
         configureWebHost?.Invoke(builder);
         var host = builder.Build();
-        _hosts.Add(host);
+        AddOrStopAsync(baseUrl, host).Wait();
         host.Start();
         return host;
     }
@@ -156,9 +194,8 @@ public class ServiceHandler : IDisposable
         if (configureApp != null) builder.Configure(configureApp);
         configureWebHost?.Invoke(builder);
         var host = builder.Build();
-        _hosts.Add(host);
-        return host
-            .StartAsync()
-            .ContinueWith<IWebHost>(t => host, TaskContinuationOptions.ExecuteSynchronously);
+        return AddOrStopAsync(baseUrl, host)
+            .ContinueWith(t => host.StartAsync())
+            .ContinueWith(t => host, TaskContinuationOptions.ExecuteSynchronously);
     }
 }
