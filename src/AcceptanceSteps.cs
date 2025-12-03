@@ -390,6 +390,9 @@ public class AcceptanceSteps : IDisposable
     public void ThenTheStatusCodeShouldBe(int expected)
         => ((int)response.ShouldNotBeNull().StatusCode).ShouldBe(expected);
 
+    public Task ReleasePortAsync(params int[] ports)
+        => handler.ReleasePortAsync(ports);
+
     #region Dispose pattern
 
     /// <summary>
