@@ -10,11 +10,9 @@ public static class FileRouteBox
         => new(route);
 }
 
-public class FileRouteBox<T> : Box<T> where T : class // FileRoute
+public class FileRouteBox<T>(T route) : Box<T>(route, "Ocelot.Configuration.File.FileRoute")
+    where T : class // FileRoute
 {
-    public FileRouteBox(T route) : base(route, "Ocelot.Configuration.File.FileRoute")
-    { }
-
     public static FileRouteBox<T> In(T route) => new(route);
     public static FileRouteBox<T> With(T route) => new(route);
 

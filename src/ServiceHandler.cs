@@ -2,10 +2,12 @@
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Server.Kestrel.Core;
+using Microsoft.AspNetCore.TestHost;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Options;
 using System.Collections.Concurrent;
 using System.Net;
 
@@ -15,7 +17,11 @@ namespace Ocelot.Testing;
 // TODO 2. Develop async versions for each sync method
 public class ServiceHandler : IDisposable
 {
+#if NET10_0_OR_GREATER
+    private readonly ConcurrentDictionary<string, IHost> _hosts = new();
+#else
     private readonly ConcurrentDictionary<string, IWebHost> _hosts = new();
+#endif
 
     public void Dispose()
     {
@@ -27,7 +33,13 @@ public class ServiceHandler : IDisposable
         GC.SuppressFinalize(this);
     }
 
-    protected Task AddOrStopAsync(string key, IWebHost host)
+    protected Task AddOrStopAsync(
+        string key,
+#if NET10_0_OR_GREATER
+        IHost host)
+#else
+        IWebHost host)
+#endif
     {
         if (_hosts.TryAdd(key, host))
             return Task.CompletedTask;
@@ -60,15 +72,37 @@ public class ServiceHandler : IDisposable
         return Task.WhenAll(tasks);
     }
 
-    public IWebHost GivenThereIsAServiceRunningOn(string baseUrl, RequestDelegate handler)
+#if NET10_0_OR_GREATER
+    private IHost CreateHost(Action<IWebHostBuilder> configureWeb)
+#else
+    private IWebHost CreateHost(Action<IWebHostBuilder> configureWeb)
+#endif
     {
-        var host = TestHostBuilder.Create()
+#if NET10_0_OR_GREATER
+        var host = TestHostBuilder.CreateHost()
+            .ConfigureWebHost(configureWeb)
+            .Build();
+#else
+        var builder = TestHostBuilder.Create();
+        configureWeb(builder);
+        var host = builder.Build();
+#endif
+        return host;
+    }
+
+#if NET10_0_OR_GREATER
+    public IHost
+#else
+    public IWebHost
+#endif
+        GivenThereIsAServiceRunningOn(string baseUrl, RequestDelegate handler)
+    {
+        void ConfigureWeb(IWebHostBuilder builder) => builder
             .UseUrls(baseUrl)
             .UseKestrel()
             .UseContentRoot(Directory.GetCurrentDirectory())
-            .UseIISIntegration()
-            .Configure(app => app.Run(handler))
-            .Build();
+            .Configure(app => app.Run(handler));
+        var host = CreateHost(ConfigureWeb);
         AddOrStopAsync(baseUrl, host).Wait();
         host.Start();
         return host;
@@ -76,61 +110,56 @@ public class ServiceHandler : IDisposable
 
     public void GivenThereIsAServiceRunningOn(string baseUrl, string basePath, RequestDelegate handler)
     {
-        var host = TestHostBuilder.Create()
+        void ConfigureWeb(IWebHostBuilder builder) => builder
             .UseUrls(baseUrl)
             .UseKestrel()
             .UseContentRoot(Directory.GetCurrentDirectory())
-            .UseIISIntegration()
-            .Configure(app => app.UsePathBase(basePath).Run(handler))
-            .Build();
+            .Configure(app => app.UsePathBase(basePath).Run(handler));
+        var host = CreateHost(ConfigureWeb);
         AddOrStopAsync(baseUrl, host).Wait();
         host.Start();
     }
 
     public void GivenThereIsAServiceRunningOn(string baseUrl, string basePath, Action<IServiceCollection> configureServices, RequestDelegate handler)
     {
-        var host = TestHostBuilder.Create()
+        void ConfigureWeb(IWebHostBuilder builder) => builder
             .UseUrls(baseUrl)
             .UseKestrel()
             .UseContentRoot(Directory.GetCurrentDirectory())
-            .UseIISIntegration()
             .ConfigureServices(configureServices)
-            .Configure(app => app.UsePathBase(basePath).Run(handler))
-            .Build();
+            .Configure(app => app.UsePathBase(basePath).Run(handler));
+        var host = CreateHost(ConfigureWeb);
         AddOrStopAsync(baseUrl, host).Wait();
         host.Start();
     }
 
     public void GivenThereIsAServiceRunningOnWithKestrelOptions(string baseUrl, string basePath, Action<KestrelServerOptions> options, RequestDelegate handler)
     {
-        var host = TestHostBuilder.Create()
+        void ConfigureWeb(IWebHostBuilder builder) => builder
             .UseUrls(baseUrl)
             .UseKestrel()
             .ConfigureKestrel(options ?? WithDefaultKestrelServerOptions) // !
             .UseContentRoot(Directory.GetCurrentDirectory())
             .UseIISIntegration()
-            .Configure(app => app.UsePathBase(basePath).Run(handler))
-            .Build();
+            .Configure(app => app.UsePathBase(basePath).Run(handler));
+        var host = CreateHost(ConfigureWeb);
         AddOrStopAsync(baseUrl, host).Wait();
         host.Start();
     }
 
     internal void WithDefaultKestrelServerOptions(KestrelServerOptions options)
-    {
-    }
+    { }
 
     public void GivenThereIsAHttpsServiceRunningOn(string baseUrl, string basePath, string fileName, string password, int port, RequestDelegate handler)
     {
         void WithKestrelOptions(KestrelServerOptions options)
-        {
-            options.Listen(IPAddress.Loopback, port, o => o.UseHttps(fileName, password));
-        }
-        var host = TestHostBuilder.Create()
+            => options.Listen(IPAddress.Loopback, port, o => o.UseHttps(fileName, password));
+        void ConfigureWeb(IWebHostBuilder builder) => builder
             .UseUrls(baseUrl)
             .UseKestrel(WithKestrelOptions)
             .UseContentRoot(Directory.GetCurrentDirectory())
-            .Configure(app => app.UsePathBase(basePath).Run(handler))
-            .Build();
+            .Configure(app => app.UsePathBase(basePath).Run(handler));
+        var host = CreateHost(ConfigureWeb);
         AddOrStopAsync(baseUrl, host).Wait();
         host.Start();
     }
@@ -147,55 +176,100 @@ public class ServiceHandler : IDisposable
 
     #endregion
 
-    public IWebHost GivenThereIsAServiceRunningOn(int port,
+#if NET10_0_OR_GREATER
+    public IHost
+#else
+    public IWebHost
+#endif
+    GivenThereIsAServiceRunningOn(int port,
         Action<WebHostBuilderContext, IConfigurationBuilder>? configureDelegate,
         Action<WebHostBuilderContext, ILoggingBuilder>? configureLogging,
         Action<IServiceCollection>? configureServices,
         Action<IApplicationBuilder>? configureApp,
         Action<IWebHostBuilder>? configureWebHost)
-        => GivenThereIsAServiceRunningOn(Localhost(port), configureDelegate, configureLogging, configureServices, configureApp, configureWebHost);
-    public IWebHost GivenThereIsAServiceRunningOn(string baseUrl,
+    => GivenThereIsAServiceRunningOn(Localhost(port), configureDelegate, configureLogging, configureServices, configureApp, configureWebHost);
+
+#if NET10_0_OR_GREATER
+    public IHost
+#else
+    public IWebHost
+#endif
+    GivenThereIsAServiceRunningOn(string baseUrl,
         Action<WebHostBuilderContext, IConfigurationBuilder>? configureDelegate,
         Action<WebHostBuilderContext, ILoggingBuilder>? configureLogging,
         Action<IServiceCollection>? configureServices,
         Action<IApplicationBuilder>? configureApp,
         Action<IWebHostBuilder>? configureWebHost)
     {
-        var builder = TestHostBuilder.Create().UseUrls(baseUrl).UseKestrel();
-        if (configureDelegate != null) builder.ConfigureAppConfiguration(configureDelegate);
-        if (configureLogging != null) builder.ConfigureLogging(configureLogging);
-        if (configureServices != null) builder.ConfigureServices(configureServices);
-        if (configureApp != null) builder.Configure(configureApp);
-        configureWebHost?.Invoke(builder);
-        var host = builder.Build();
+        void ConfigureWeb(IWebHostBuilder builder)
+        {
+            builder.UseUrls(baseUrl).UseKestrel();
+            if (configureDelegate != null) builder.ConfigureAppConfiguration(configureDelegate);
+            if (configureLogging != null) builder.ConfigureLogging(configureLogging);
+            if (configureServices != null) builder.ConfigureServices(configureServices);
+            if (configureApp != null) builder.Configure(configureApp);
+            configureWebHost?.Invoke(builder);
+        }
+        var host = CreateBuilder(ConfigureWeb).Build();
         AddOrStopAsync(baseUrl, host).Wait();
         host.Start();
         return host;
     }
 
-    public Task<IWebHost> GivenThereIsAServiceRunningOnAsync(int port,
+#if NET10_0_OR_GREATER
+    public Task<IHost>
+#else
+    public Task<IWebHost>
+#endif
+    GivenThereIsAServiceRunningOnAsync(int port,
         Action<WebHostBuilderContext, IConfigurationBuilder>? configureDelegate,
         Action<WebHostBuilderContext, ILoggingBuilder>? configureLogging,
         Action<IServiceCollection>? configureServices,
         Action<IApplicationBuilder>? configureApp,
         Action<IWebHostBuilder>? configureWebHost)
         => GivenThereIsAServiceRunningOnAsync(Localhost(port), configureDelegate, configureLogging, configureServices, configureApp, configureWebHost);
-    public Task<IWebHost> GivenThereIsAServiceRunningOnAsync(string baseUrl,
+
+#if NET10_0_OR_GREATER
+    public Task<IHost>
+#else
+    public Task<IWebHost>
+#endif
+    GivenThereIsAServiceRunningOnAsync(string baseUrl,
         Action<WebHostBuilderContext, IConfigurationBuilder>? configureDelegate,
         Action<WebHostBuilderContext, ILoggingBuilder>? configureLogging,
         Action<IServiceCollection>? configureServices,
         Action<IApplicationBuilder>? configureApp,
         Action<IWebHostBuilder>? configureWebHost)
     {
-        var builder = TestHostBuilder.Create().UseUrls(baseUrl).UseKestrel();
-        if (configureDelegate != null) builder.ConfigureAppConfiguration(configureDelegate);
-        if (configureLogging != null) builder.ConfigureLogging(configureLogging);
-        if (configureServices != null) builder.ConfigureServices(configureServices);
-        if (configureApp != null) builder.Configure(configureApp);
-        configureWebHost?.Invoke(builder);
-        var host = builder.Build();
+        void ConfigureWeb(IWebHostBuilder builder)
+        {
+            builder.UseUrls(baseUrl).UseKestrel();
+            if (configureDelegate != null) builder.ConfigureAppConfiguration(configureDelegate);
+            if (configureLogging != null) builder.ConfigureLogging(configureLogging);
+            if (configureServices != null) builder.ConfigureServices(configureServices);
+            if (configureApp != null) builder.Configure(configureApp);
+            configureWebHost?.Invoke(builder);
+        }
+        var host = CreateBuilder(ConfigureWeb).Build();
         return AddOrStopAsync(baseUrl, host)
             .ContinueWith(t => host.StartAsync())
             .ContinueWith(t => host, TaskContinuationOptions.ExecuteSynchronously);
+    }
+
+#if NET10_0_OR_GREATER
+    private IHostBuilder
+#else
+    private IWebHostBuilder
+#endif
+    CreateBuilder(Action<IWebHostBuilder> configureWeb)
+    {
+#if NET10_0_OR_GREATER
+        return TestHostBuilder.CreateHost()
+            .ConfigureWebHost(configureWeb);
+#else
+        var builder = TestHostBuilder.Create();
+        configureWeb(builder);
+        return builder;
+#endif
     }
 }

@@ -1,5 +1,6 @@
 ﻿using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
+using Microsoft.AspNetCore.Hosting.Server;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.TestHost;
 using Microsoft.Extensions.Configuration;
@@ -19,16 +20,11 @@ using System.Text.Unicode;
 using CookieHeaderValue = Microsoft.Net.Http.Headers.CookieHeaderValue;
 using MediaTypeHeaderValue = System.Net.Http.Headers.MediaTypeHeaderValue;
 
-//using Newtonsoft.Json;
-//using Ocelot.Configuration.File;
-//using Ocelot.DependencyInjection;
-//using Ocelot.Middleware;
-
 namespace Ocelot.Testing;
 
 public class AcceptanceSteps : IDisposable
 {
-    protected IWebHost? ocelotHost;
+    protected IHost? ocelotHost;
     protected TestServer? ocelotServer;
     protected HttpClient? ocelotClient;
     protected HttpResponseMessage? response;
@@ -132,6 +128,12 @@ public class AcceptanceSteps : IDisposable
     };
 
     #region GivenOcelotIsRunning
+    public void WithBasicConfiguration(HostBuilderContext hosting, IConfigurationBuilder config)
+    {
+        config.SetBasePath(hosting.HostingEnvironment.ContentRootPath);
+        //config.AddOcelot(ocelotConfigFileName, false, false);
+        config.AddJsonFile(ocelotConfigFileName, false, false);
+    }
     public void WithBasicConfiguration(WebHostBuilderContext hosting, IConfigurationBuilder config)
     {
         config.SetBasePath(hosting.HostingEnvironment.ContentRootPath);
@@ -144,34 +146,87 @@ public class AcceptanceSteps : IDisposable
     public static Task<IApplicationBuilder> WithUseOcelotAsync(IApplicationBuilder app) => Ocelot.UseOcelot(app); // app.UseOcelot();
 
     public int GivenOcelotIsRunning()
-        => GivenOcelotIsRunning(null, null, null, null, null, null);
+        => GivenOcelotIsRunning(null, null, null, null, null, null, null);
+    public Task<int> GivenOcelotIsRunningAsync()
+        => GivenOcelotIsRunningAsync(null, null, null, null, null, null, null);
+
     public int GivenOcelotIsRunning(Action<WebHostBuilderContext, IConfigurationBuilder> configureDelegate)
-        => GivenOcelotIsRunning(configureDelegate, null, null, null, null, null);
+        => GivenOcelotIsRunning(configureDelegate, null, null, null, null, null, null);
+    public Task<int> GivenOcelotIsRunningAsync(Action<WebHostBuilderContext, IConfigurationBuilder> configureDelegate)
+        => GivenOcelotIsRunningAsync(configureDelegate, null, null, null, null, null, null);
+
     public int GivenOcelotIsRunning(Action<IServiceCollection> configureServices)
-        => GivenOcelotIsRunning(null, configureServices, null, null, null, null);
+        => GivenOcelotIsRunning(null, configureServices, null, null, null, null, null);
+    public Task<int> GivenOcelotIsRunningAsync(Action<IServiceCollection> configureServices)
+        => GivenOcelotIsRunningAsync(null, configureServices, null, null, null, null, null);
+
     public int GivenOcelotIsRunning(Action<WebHostBuilderContext, IConfigurationBuilder> configureDelegate, Action<IServiceCollection> configureServices)
-        => GivenOcelotIsRunning(configureDelegate, configureServices, null, null, null, null);
+        => GivenOcelotIsRunning(configureDelegate, configureServices, null, null, null, null, null);
+    public Task<int> GivenOcelotIsRunningAsync(Action<WebHostBuilderContext, IConfigurationBuilder> configureDelegate, Action<IServiceCollection> configureServices)
+        => GivenOcelotIsRunningAsync(configureDelegate, configureServices, null, null, null, null, null);
+
     public int GivenOcelotIsRunning(Action<IApplicationBuilder>? configureApp)
-        => GivenOcelotIsRunning(null, null, configureApp, null, null, null);
+        => GivenOcelotIsRunning(null, null, configureApp, null, null, null, null);
+    public Task<int> GivenOcelotIsRunningAsync(Action<IApplicationBuilder>? configureApp)
+        => GivenOcelotIsRunningAsync(null, null, configureApp, null, null, null, null);
+
     public int GivenOcelotIsRunning(Action<WebHostBuilderContext, IConfigurationBuilder> configureDelegate, Action<IServiceCollection> configureServices, Action<IApplicationBuilder>? configureApp)
-        => GivenOcelotIsRunning(configureDelegate, configureServices, configureApp, null, null, null);
+        => GivenOcelotIsRunning(configureDelegate, configureServices, configureApp, null, null, null, null);
+    public Task<int> GivenOcelotIsRunningAsync(Action<WebHostBuilderContext, IConfigurationBuilder> configureDelegate, Action<IServiceCollection> configureServices, Action<IApplicationBuilder>? configureApp)
+        => GivenOcelotIsRunningAsync(configureDelegate, configureServices, configureApp, null, null, null, null);
 
     protected int GivenOcelotIsRunning(
         Action<WebHostBuilderContext, IConfigurationBuilder>? configureDelegate,
         Action<IServiceCollection>? configureServices,
         Action<IApplicationBuilder>? configureApp,
-        Action<IWebHostBuilder>? configureWebHost,
+        Action<IWebHostBuilder>? configureWebHost, Action<IWebHostBuilder>? postConfigureHost,
+        Action<TestServer>? configureServer,
+        Action<HttpClient>? configureClient)
+    {
+#if NET10_0_OR_GREATER
+        return GivenOcelotHostIsRunning(configureDelegate, configureServices, configureApp, configureWebHost, postConfigureHost, configureServer, configureClient)
+            .GetAwaiter().GetResult();
+#else
+        return GivenOcelotIsRunningInternal(configureDelegate, configureServices, configureApp, configureWebHost, postConfigureHost, configureServer, configureClient);
+#endif
+    }
+
+    protected Task<int> GivenOcelotIsRunningAsync(
+        Action<WebHostBuilderContext, IConfigurationBuilder>? configureDelegate,
+        Action<IServiceCollection>? configureServices,
+        Action<IApplicationBuilder>? configureApp,
+        Action<IWebHostBuilder>? configureWebHost, Action<IWebHostBuilder>? postConfigureHost,
+        Action<TestServer>? configureServer,
+        Action<HttpClient>? configureClient)
+    {
+#if NET10_0_OR_GREATER
+        return GivenOcelotHostIsRunning(configureDelegate, configureServices, configureApp, configureWebHost, postConfigureHost, configureServer, configureClient);
+#else
+        return Task.Run(() => GivenOcelotIsRunningInternal(configureDelegate, configureServices, configureApp, configureWebHost, postConfigureHost, configureServer, configureClient));
+#endif
+    }
+
+#if (NET8_0 || NET9_0)
+    private int GivenOcelotIsRunningInternal(
+        Action<WebHostBuilderContext, IConfigurationBuilder>? configureDelegate,
+        Action<IServiceCollection>? configureServices,
+        Action<IApplicationBuilder>? configureApp,
+        Action<IWebHostBuilder>? сonfigureWebHost, Action<IWebHostBuilder>? postConfigureHost,
         Action<TestServer>? configureServer,
         Action<HttpClient>? configureClient)
     {
         int port = PortFinder.GetRandomPort();
         var baseUrl = DownstreamUrl(port);
-        var builder = TestHostBuilder.Create()
+        var builder = TestHostBuilder.Create();
+        if (сonfigureWebHost is not null)
+            сonfigureWebHost(builder);
+        else builder
             .ConfigureAppConfiguration(configureDelegate ?? WithBasicConfiguration)
             .ConfigureServices(configureServices ?? WithAddOcelot)
             .Configure(configureApp ?? WithUseOcelot)
             .UseUrls(baseUrl); // run Ocelot on specific port, rather than on std 80 port of TestServer
-        configureWebHost?.Invoke(builder);
+        postConfigureHost?.Invoke(builder);
+
         ocelotServer = new(builder)
         {
             BaseAddress = new(baseUrl) // will create Oc client with this base address, including port
@@ -181,29 +236,51 @@ public class AcceptanceSteps : IDisposable
         configureClient?.Invoke(ocelotClient);
         return port;
     }
+#endif
+    private static void SetBaseUrl(/*FileConfiguration*/object? configuration, string baseUrl)
+    {
+        var p1 = configuration?.GetType().GetProperty("GlobalConfiguration");
+        var globalConfiguration = p1?.GetValue(configuration);
+        var p2 = p1?.PropertyType.GetProperty("BaseUrl");
+        p2?.SetValue(globalConfiguration, baseUrl);
+    }
 
-    protected async Task<IHost> GivenOcelotHostIsRunning(
+    protected async Task<int> GivenOcelotHostIsRunning(
         Action<WebHostBuilderContext, IConfigurationBuilder>? configureDelegate,
         Action<IServiceCollection>? configureServices,
         Action<IApplicationBuilder>? configureApp,
-        Action<IWebHostBuilder>? configureHost)
+        Action<IWebHostBuilder>? сonfigureWebHost, Action<IWebHostBuilder>? postConfigureHost,
+        Action<TestServer>? configureServer,
+        Action<HttpClient>? configureClient)
     {
-        void ConfigureWeb(IWebHostBuilder webBuilder)
+        int port = PortFinder.GetRandomPort();
+        var baseUrl = DownstreamUrl(port);
+        void ConfigureWeb(IWebHostBuilder builder)
         {
-            webBuilder
+            builder
                 .UseKestrel()
                 .ConfigureAppConfiguration(configureDelegate ?? WithBasicConfiguration)
                 .ConfigureServices(configureServices ?? WithAddOcelot)
-                .Configure(configureApp ?? WithUseOcelot);
-            configureHost?.Invoke(webBuilder);
+                .Configure(configureApp ?? WithUseOcelot)
+                .UseUrls(baseUrl);
+                //.UseTestServer(o => o.BaseAddress = new(baseUrl));
+            postConfigureHost?.Invoke(builder);
         }
         var host = TestHostBuilder
             .CreateHost()
-            .ConfigureWebHost(ConfigureWeb)
+            .ConfigureWebHost(сonfigureWebHost ?? ConfigureWeb)
             .Build();
         await host.StartAsync();
-        return host;
+        ocelotHost = host;
+        //ocelotServer = host.GetTestServer();
+        //configureServer?.Invoke(ocelotServer!);
+        ocelotClient = ocelotServer?.CreateClient();
+        ocelotClient ??= new() { BaseAddress = new(baseUrl), };
+        configureClient?.Invoke(ocelotClient);
+        return port;
     }
+
+    protected IServiceProvider OcelotServices { get => ocelotServer?.Services ?? ocelotHost!.Services; }
     #endregion
 
     public static void GivenIWait(int wait) => Thread.Sleep(wait);
@@ -313,8 +390,8 @@ public class AcceptanceSteps : IDisposable
     public async Task WhenIPostUrlOnTheApiGateway(string url, HttpContent content)
     {
         ArgumentNullException.ThrowIfNull(ocelotClient);
-        var httpRequestMessage = new HttpRequestMessage(HttpMethod.Post, url) { Content = content };
-        response = await ocelotClient.SendAsync(httpRequestMessage);
+        var request = new HttpRequestMessage(HttpMethod.Post, url) { Content = content };
+        response = await ocelotClient.SendAsync(request);
     }
     public async Task WhenIPostUrlOnTheApiGateway(string url, string content)
     {
