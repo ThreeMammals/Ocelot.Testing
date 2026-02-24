@@ -103,7 +103,7 @@ public class ServiceHandler : IDisposable
             .UseContentRoot(Directory.GetCurrentDirectory())
             .Configure(app => app.Run(handler));
         var host = CreateHost(ConfigureWeb);
-        AddOrStopAsync(baseUrl, host).Wait();
+        AddOrStopAsync(baseUrl, host).GetAwaiter().GetResult();
         host.Start();
         return host;
     }
@@ -116,7 +116,7 @@ public class ServiceHandler : IDisposable
             .UseContentRoot(Directory.GetCurrentDirectory())
             .Configure(app => app.UsePathBase(basePath).Run(handler));
         var host = CreateHost(ConfigureWeb);
-        AddOrStopAsync(baseUrl, host).Wait();
+        AddOrStopAsync(baseUrl, host).GetAwaiter().GetResult();
         host.Start();
     }
 
@@ -129,7 +129,7 @@ public class ServiceHandler : IDisposable
             .ConfigureServices(configureServices)
             .Configure(app => app.UsePathBase(basePath).Run(handler));
         var host = CreateHost(ConfigureWeb);
-        AddOrStopAsync(baseUrl, host).Wait();
+        AddOrStopAsync(baseUrl, host).GetAwaiter().GetResult();
         host.Start();
     }
 
@@ -143,7 +143,7 @@ public class ServiceHandler : IDisposable
             .UseIISIntegration()
             .Configure(app => app.UsePathBase(basePath).Run(handler));
         var host = CreateHost(ConfigureWeb);
-        AddOrStopAsync(baseUrl, host).Wait();
+        AddOrStopAsync(baseUrl, host).GetAwaiter().GetResult();
         host.Start();
     }
 
@@ -160,7 +160,7 @@ public class ServiceHandler : IDisposable
             .UseContentRoot(Directory.GetCurrentDirectory())
             .Configure(app => app.UsePathBase(basePath).Run(handler));
         var host = CreateHost(ConfigureWeb);
-        AddOrStopAsync(baseUrl, host).Wait();
+        AddOrStopAsync(baseUrl, host).GetAwaiter().GetResult();
         host.Start();
     }
 
@@ -211,7 +211,7 @@ public class ServiceHandler : IDisposable
             configureWebHost?.Invoke(builder);
         }
         var host = CreateBuilder(ConfigureWeb).Build();
-        AddOrStopAsync(baseUrl, host).Wait();
+        AddOrStopAsync(baseUrl, host).GetAwaiter().GetResult();
         host.Start();
         return host;
     }

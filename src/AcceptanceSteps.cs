@@ -142,7 +142,7 @@ public class AcceptanceSteps : IDisposable
     }
 
     public static void WithAddOcelot(IServiceCollection services) => Ocelot.AddOcelot(services); // services.AddOcelot();
-    public static void WithUseOcelot(IApplicationBuilder app) => Ocelot.UseOcelot(app).Wait(); // app.UseOcelot().Wait();
+    public static void WithUseOcelot(IApplicationBuilder app) => WithUseOcelotAsync(app).GetAwaiter().GetResult();
     public static Task<IApplicationBuilder> WithUseOcelotAsync(IApplicationBuilder app) => Ocelot.UseOcelot(app); // app.UseOcelot();
 
     public int GivenOcelotIsRunning()
