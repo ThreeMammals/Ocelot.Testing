@@ -7,6 +7,8 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
+using Ocelot.Configuration.File;
+using Ocelot.DependencyInjection;
 using Shouldly;
 using System.Collections;
 using System.Diagnostics;
@@ -55,70 +57,74 @@ public class AcceptanceSteps : IDisposable
 
     public HttpClient? OcelotClient => ocelotClient;
 
-    protected virtual /*FileHostAndPort*/object? Localhost(int port)
+    protected virtual FileHostAndPort /*object?*/ Localhost(int port)
     {
-        // return new("localhost", port);
-        return Ocelot.CreateFileHostAndPort("localhost", port, out _);
+        // return Ocelot.CreateFileHostAndPort("localhost", port, out _);
+        return new("localhost", port);
     }
 
     protected static string DownstreamUrl(int port) => DownstreamUrl(port, Uri.UriSchemeHttp);
     protected static string DownstreamUrl(int port, string scheme) => $"{scheme ?? Uri.UriSchemeHttp}://localhost:{port}";
     protected static string LoopbackLocalhostUrl(int port, int loopbackIndex = 0) => $"{Uri.UriSchemeHttp}://127.0.0.{++loopbackIndex}:{port}";
 
-    protected virtual /*FileConfiguration*/object? GivenConfiguration(params /*FileRoute*/object[] routes)
+    protected virtual FileConfiguration /*object?*/ GivenConfiguration(params FileRoute[] /*object[]*/ routes)
     {
-        object? c = Ocelot.CreateFileConfiguration(out Type type);
-        PropertyInfo? property = type.GetProperty("Routes");
-        if (property?.GetValue(c) is IList list)
-            foreach (var route in routes)
-                list.Add(route);
+        //object? c = Ocelot.CreateFileConfiguration(out Type type);
+        //PropertyInfo? property = type.GetProperty("Routes");
+        //if (property?.GetValue(c) is IList list)
+        //    foreach (var route in routes)
+        //        list.Add(route);
+        //return c;
+        var c = new FileConfiguration();
+        c.Routes.AddRange(routes);
         return c;
     }
 
-    protected virtual /*FileRoute*/object? GivenDefaultRoute(int port) => GivenRoute(port);
-    protected virtual /*FileRoute*/object? GivenCatchAllRoute(int port) => GivenRoute(port, "/{everything}", "/{everything}");
-    protected virtual /*FileRoute*/object? GivenRoute(int port, string? upstream = null, string? downstream = null)
+    protected virtual FileRoute GivenDefaultRoute(int port) => GivenRoute(port);
+    protected virtual FileRoute GivenCatchAllRoute(int port) => GivenRoute(port, "/{everything}", "/{everything}");
+    protected virtual FileRoute GivenRoute(int port, string? upstream = null, string? downstream = null)
     {
-        object? r = Ocelot.CreateFileRoute(out Type type);
+        // object? r = Ocelot.CreateFileRoute(out Type type);
+        var r = new FileRoute();
 
-        //r.DownstreamHostAndPorts.Add(Localhost(port));
-        PropertyInfo? property = type.GetProperty("DownstreamHostAndPorts");
-        if (property?.GetValue(r) is IList downstreamHostAndPorts)
-            downstreamHostAndPorts.Add(Localhost(port));
+        r.DownstreamHostAndPorts.Add(Localhost(port));
+        //PropertyInfo? property = type.GetProperty("DownstreamHostAndPorts");
+        //if (property?.GetValue(r) is IList downstreamHostAndPorts)
+        //    downstreamHostAndPorts.Add(Localhost(port));
 
-        //r.DownstreamPathTemplate = downstream ?? "/";
-        property = type.GetProperty("DownstreamPathTemplate");
-        property?.SetValue(r, downstream ?? "/");
+        r.DownstreamPathTemplate = downstream ?? "/";
+        //property = type.GetProperty("DownstreamPathTemplate");
+        //property?.SetValue(r, downstream ?? "/");
 
-        //r.DownstreamScheme = Uri.UriSchemeHttp;
-        property = type.GetProperty("DownstreamScheme");
-        property?.SetValue(r, Uri.UriSchemeHttp);
+        r.DownstreamScheme = Uri.UriSchemeHttp;
+        //property = type.GetProperty("DownstreamScheme");
+        //property?.SetValue(r, Uri.UriSchemeHttp);
 
-        //r.UpstreamPathTemplate = upstream ?? "/";
-        property = type.GetProperty("UpstreamPathTemplate");
-        property?.SetValue(r, upstream ?? "/");
+        r.UpstreamPathTemplate = upstream ?? "/";
+        //property = type.GetProperty("UpstreamPathTemplate");
+        //property?.SetValue(r, upstream ?? "/");
 
-        //r.UpstreamHttpMethod.Add(HttpMethods.Get);
-        property = type.GetProperty("UpstreamHttpMethod");
-        if (property?.GetValue(r) is IList upstreamHttpMethod)
-            upstreamHttpMethod.Add(HttpMethods.Get);
+        r.UpstreamHttpMethod.Add(HttpMethods.Get);
+        //property = type.GetProperty("UpstreamHttpMethod");
+        //if (property?.GetValue(r) is IList upstreamHttpMethod)
+        //    upstreamHttpMethod.Add(HttpMethods.Get);
 
         return r;
     }
 
-    public virtual void GivenThereIsAConfiguration(/*FileConfiguration*/object fileConfiguration)
-        => GivenThereIsAConfiguration(fileConfiguration, ocelotConfigFileName);
-    public virtual void GivenThereIsAConfiguration(/*FileConfiguration*/object from, string toFile)
+    public virtual void GivenThereIsAConfiguration(FileConfiguration configuration)
+        => GivenThereIsAConfiguration(configuration, ocelotConfigFileName);
+    public virtual void GivenThereIsAConfiguration(FileConfiguration from, string toFile)
     {
         var json = SerializeJson(from, ref toFile);
         File.WriteAllText(toFile, json);
     }
-    public virtual Task GivenThereIsAConfigurationAsync(/*FileConfiguration*/object from, string toFile)
+    public virtual Task GivenThereIsAConfigurationAsync(FileConfiguration from, string toFile)
     {
         var json = SerializeJson(from, ref toFile);
         return File.WriteAllTextAsync(toFile, json);
     }
-    protected virtual string SerializeJson(/*FileConfiguration*/object from, ref string toFile)
+    protected virtual string SerializeJson(FileConfiguration from, ref string toFile)
     {
         toFile ??= ocelotConfigFileName;
         Files.Add(toFile); // register for disposing
@@ -137,14 +143,14 @@ public class AcceptanceSteps : IDisposable
     public void WithBasicConfiguration(HostBuilderContext hosting, IConfigurationBuilder config)
     {
         config.SetBasePath(hosting.HostingEnvironment.ContentRootPath);
-        //config.AddOcelot(ocelotConfigFileName, false, false);
-        config.AddJsonFile(ocelotConfigFileName, false, false);
+        config.AddOcelot(ocelotConfigFileName, false, false);
+        //config.AddJsonFile(ocelotConfigFileName, false, false);
     }
     public void WithBasicConfiguration(WebHostBuilderContext hosting, IConfigurationBuilder config)
     {
         config.SetBasePath(hosting.HostingEnvironment.ContentRootPath);
-        //config.AddOcelot(ocelotConfigFileName, false, false);
-        config.AddJsonFile(ocelotConfigFileName, false, false);
+        config.AddOcelot(ocelotConfigFileName, false, false);
+        //config.AddJsonFile(ocelotConfigFileName, false, false);
     }
 
     public static void WithAddOcelot(IServiceCollection services) => Ocelot.AddOcelot(services); // services.AddOcelot();
@@ -243,12 +249,13 @@ public class AcceptanceSteps : IDisposable
         return port;
     }
 #endif
-    private static void SetBaseUrl(/*FileConfiguration*/object? configuration, string baseUrl)
+    private static void SetBaseUrl(FileConfiguration configuration, string baseUrl)
     {
-        var p1 = configuration?.GetType().GetProperty("GlobalConfiguration");
-        var globalConfiguration = p1?.GetValue(configuration);
-        var p2 = p1?.PropertyType.GetProperty("BaseUrl");
-        p2?.SetValue(globalConfiguration, baseUrl);
+        configuration.GlobalConfiguration.BaseUrl = baseUrl;
+        //var p1 = configuration?.GetType().GetProperty("GlobalConfiguration");
+        //var globalConfiguration = p1?.GetValue(configuration);
+        //var p2 = p1?.PropertyType.GetProperty("BaseUrl");
+        //p2?.SetValue(globalConfiguration, baseUrl);
     }
 
     protected async Task<int> GivenOcelotHostIsRunning(

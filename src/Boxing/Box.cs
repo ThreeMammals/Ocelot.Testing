@@ -1,4 +1,4 @@
-﻿namespace Ocelot.Testing;
+﻿namespace Ocelot.Testing.Boxing;
 
 public class Box
 {

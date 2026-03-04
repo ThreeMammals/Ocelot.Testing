@@ -8,6 +8,7 @@ using Microsoft.IdentityModel.Tokens;
 using Ocelot.Authorization;
 using Ocelot.Configuration.File;
 using Ocelot.DependencyInjection;
+using Ocelot.Testing.Boxing;
 using Shouldly;
 using System.Data;
 using System.IdentityModel.Tokens.Jwt;
@@ -207,8 +208,10 @@ public class AuthenticationSteps : AcceptanceSteps
         string[]? scopes = null,
         string? method = null)
     {
-        FileRoute? r = GivenDefaultRoute(port)?.WithMethods(method ?? HttpMethods.Get) as FileRoute;
-        r!.AuthenticationOptions = new(scheme)
+        // FileRoute r = GivenDefaultRoute(port)?.WithMethods(method ?? HttpMethods.Get) as FileRoute;
+        FileRoute r = GivenDefaultRoute(port);
+        r.UpstreamHttpMethod.Add(method ?? HttpMethods.Get);
+        r.AuthenticationOptions = new(scheme)
         {
             AllowAnonymous = allowAnonymous,
             AllowedScopes = scopes?.ToList(),

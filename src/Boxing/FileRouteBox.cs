@@ -1,17 +1,18 @@
-﻿using System.Collections;
+﻿using Ocelot.Configuration.File;
+using System.Collections;
 
-namespace Ocelot.Testing;
+namespace Ocelot.Testing.Boxing;
 
 public static class FileRouteBox
 {
-    public static FileRouteBox<T> In<T>(T route) where T : class
+    public static FileRouteBox<T> In<T>(T route) where T : FileRoute
         => new(route);
-    public static FileRouteBox<T> With<T>(T route) where T : class
+    public static FileRouteBox<T> With<T>(T route) where T : FileRoute
         => new(route);
 }
 
 public class FileRouteBox<T>(T route) : Box<T>(route, "Ocelot.Configuration.File.FileRoute")
-    where T : class // FileRoute
+    where T : FileRoute
 {
     public static FileRouteBox<T> In(T route) => new(route);
     public static FileRouteBox<T> With(T route) => new(route);
