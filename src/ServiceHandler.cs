@@ -73,9 +73,9 @@ public class ServiceHandler : IDisposable
     }
 
 #if NET10_0_OR_GREATER
-    private IHost CreateHost(Action<IWebHostBuilder> configureWeb)
+    private static IHost CreateHost(Action<IWebHostBuilder> configureWeb)
 #else
-    private IWebHost CreateHost(Action<IWebHostBuilder> configureWeb)
+    private static IWebHost CreateHost(Action<IWebHostBuilder> configureWeb)
 #endif
     {
 #if NET10_0_OR_GREATER
@@ -257,9 +257,9 @@ public class ServiceHandler : IDisposable
     }
 
 #if NET10_0_OR_GREATER
-    private IHostBuilder
+    private static IHostBuilder
 #else
-    private IWebHostBuilder
+    private static IWebHostBuilder
 #endif
     CreateBuilder(Action<IWebHostBuilder> configureWeb)
     {

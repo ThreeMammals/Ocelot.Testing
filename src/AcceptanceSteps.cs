@@ -22,6 +22,10 @@ using MediaTypeHeaderValue = System.Net.Http.Headers.MediaTypeHeaderValue;
 
 namespace Ocelot.Testing;
 
+/// <summary>
+/// This is the base class for acceptance testing classes, specifically for developing Step classes.
+/// It is the recommended base class to inherit from.
+/// </summary>
 public class AcceptanceSteps : IDisposable
 {
     protected IHost? ocelotHost;
@@ -46,13 +50,15 @@ public class AcceptanceSteps : IDisposable
 
     protected List<string> Files { get; }
     protected List<string> Folders { get; }
-    protected string TestID { get => _testId.ToString("N"); }
+    protected virtual string TestID { get => _testId.ToString("N"); }
+    public virtual string TestName([CallerMemberName] string? testName = null) => testName ?? GetType().Name; // but it could be TestID also
+
     public HttpClient? OcelotClient => ocelotClient;
 
     protected virtual /*FileHostAndPort*/object? Localhost(int port)
     {
         // return new("localhost", port);
-        return Ocelot.CreateFileHostAndPort("localhost", port, out Type type);
+        return Ocelot.CreateFileHostAndPort("localhost", port, out _);
     }
 
     protected static string DownstreamUrl(int port) => DownstreamUrl(port, Uri.UriSchemeHttp);
