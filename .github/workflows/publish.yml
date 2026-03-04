@@ -38,7 +38,7 @@ jobs:
         run: dotnet --info
 
       - name: Restore dependencies
-        run: dotnet restore ./Ocelot.Testing.sln
+        run: dotnet restore ./Ocelot.Testing.slnx
 
       - name: Pack project
         run: dotnet pack ./src/Ocelot.Testing.csproj --configuration Release --output ./packages /p:ContinuousIntegrationBuild=true

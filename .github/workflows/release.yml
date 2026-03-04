@@ -71,7 +71,7 @@ jobs:
           echo "PkgVersion=$xml_value" >> $GITHUB_OUTPUT
 
       - name: Restore dependencies
-        run: dotnet restore ./Ocelot.Testing.sln
+        run: dotnet restore ./Ocelot.Testing.slnx
       - name: Pack project
         run: dotnet pack ./src/Ocelot.Testing.csproj --configuration Release --output ./packages /p:ContinuousIntegrationBuild=true
       - name: Publish to GitHub Packages
