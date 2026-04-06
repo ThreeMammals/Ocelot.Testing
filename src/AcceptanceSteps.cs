@@ -62,6 +62,10 @@ public class AcceptanceSteps : IDisposable
     protected static string DownstreamUrl(int port, string scheme) => $"{scheme ?? Uri.UriSchemeHttp}://localhost:{port}";
     protected static string LoopbackLocalhostUrl(int port, int loopbackIndex = 0) => $"{Uri.UriSchemeHttp}://127.0.0.{++loopbackIndex}:{port}";
 
+    protected virtual bool IsCiCd() => IsRunningInGitHubActions();
+    protected static bool IsRunningInGitHubActions()
+        => Environment.GetEnvironmentVariable("GITHUB_ACTIONS") == "true";
+
     public virtual FileConfiguration GivenConfiguration(params FileRoute[] routes)
     {
         var c = new FileConfiguration();
