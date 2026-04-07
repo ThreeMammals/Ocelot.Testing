@@ -5,7 +5,7 @@ using System.Diagnostics;
 using System.Net;
 using System.Runtime.CompilerServices;
 
-namespace Ocelot.Testing;
+namespace Ocelot.Testing.Steps;
 
 public class TimeoutSteps : AcceptanceSteps
 {
