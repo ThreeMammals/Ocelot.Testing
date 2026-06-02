@@ -12,22 +12,24 @@ jobs:
       contents: read
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
 
       - name: README.md
         run: |
-          echo Original README.md
-          echo ------------------------
+          echo "::group::Original README.md"
           cat README.md
+          echo "::endgroup::"
           echo ------------------------
           # Removes tags <sub> and </sub>
           sed -i 's/<\/\?sub>//g' README.md
-          echo New content of README.md
-          echo ------------------------
+          # Replaces relative GitHub paths with NuGet-friendly absolute URLs
+          sed -i 's|/ocelot_icon.png|https://raw.githubusercontent.com/ThreeMammals/Ocelot.Testing/refs/heads/main/ocelot_icon.png|g' README.md
+          echo "::group::New content of README.md"
           cat README.md
+          echo "::endgroup::"
 
       - name: Setup .NET
-        uses: actions/setup-dotnet@v4
+        uses: actions/setup-dotnet@v5
         with:
           dotnet-version: |
             8.0.x

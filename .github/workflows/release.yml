@@ -12,10 +12,10 @@ jobs:
       contents: write
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
 
       - name: Setup .NET
-        uses: actions/setup-dotnet@v4
+        uses: actions/setup-dotnet@v5
         with:
           dotnet-version: |
             8.0.x
@@ -26,9 +26,13 @@ jobs:
 
       - name: README.md
         run: |
-          echo 'Removes tags <sub> and </sub>'
+          # Removes tags <sub> and </sub>
           sed -i 's/<\/\?sub>//g' README.md
+          # Replaces relative GitHub paths with NuGet-friendly absolute URLs
+          sed -i 's|/ocelot_icon.png|https://raw.githubusercontent.com/ThreeMammals/Ocelot.Testing/refs/heads/main/ocelot_icon.png|g' README.md
+          echo "::group::New content of README.md"
           cat README.md
+          echo "::endgroup::"
       - name: Install tools
         run: |
           sudo apt update
