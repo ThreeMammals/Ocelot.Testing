@@ -1,4 +1,5 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
+
   <PropertyGroup>
     <TargetFrameworks>net8.0;net9.0;net10.0</TargetFrameworks>
     <ImplicitUsings>enable</ImplicitUsings>
@@ -7,18 +8,18 @@
     <IncludeSymbols>True</IncludeSymbols>
     <SymbolPackageFormat>snupkg</SymbolPackageFormat>
     <!--Package properties-->
-    <Version>25.0.0</Version>
+    <Version>25.0.1-beta.1</Version>
     <!-- <VersionPrefix>0.0.0-dev</VersionPrefix> -->
     <PackageId>Ocelot.Testing</PackageId>
     <PackageDescription>A shared library for testing the Ocelot core library and its extension packages, including both acceptance and unit tests.</PackageDescription>
-    <PackageReleaseNotes>https://github.com/ThreeMammals/Ocelot/releases/tag/25.0.0</PackageReleaseNotes>
+    <PackageReleaseNotes>https://github.com/ThreeMammals/Ocelot/releases/tag/25.0.1</PackageReleaseNotes>
     <PackageIcon>ocelot_icon.png</PackageIcon>
     <PackageReadmeFile>README.md</PackageReadmeFile>
     <PackageLicenseFile>LICENSE</PackageLicenseFile>
     <PackageTags>ocelot;testing</PackageTags>
     <PackageProjectUrl>https://github.com/ThreeMammals/Ocelot</PackageProjectUrl>
     <RepositoryUrl>https://github.com/ThreeMammals/Ocelot.Testing</RepositoryUrl>
-    <Authors>Raman Maksimchuk</Authors>
+    <Authors>Tom Pallister, Raman Maksimchuk</Authors>
     <Company>Three Mammals</Company>
     <Product>Ocelot Gateway</Product>
     <Copyright>© 2026 Three Mammals. MIT licensed OSS</Copyright>
@@ -30,27 +31,28 @@
   </ItemGroup>
   <ItemGroup>
     <PackageReference Include="Moq" Version="4.20.72" />
-    <PackageReference Include="Ocelot" Version="25.0.0" />
+    <PackageReference Include="Ocelot" Version="25.0.1" />
     <PackageReference Include="Shouldly" Version="4.3.0" />
-    <PackageReference Include="System.Text.Json" Version="10.0.10" />
+    <PackageReference Include="System.Text.Json" Version="10.0.12" />
   </ItemGroup>
 
   <!-- Conditionally obtain references for the .NET 8.0 target -->
   <ItemGroup Condition=" '$(TargetFramework)' == 'net8.0' ">
-    <PackageReference Include="Microsoft.AspNetCore.Authentication.JwtBearer" Version="8.0.29" />
-    <PackageReference Include="Microsoft.AspNetCore.Mvc.NewtonsoftJson" Version="8.0.29" />
-    <PackageReference Include="Microsoft.AspNetCore.TestHost" Version="8.0.29" />
+    <PackageReference Include="Microsoft.AspNetCore.Authentication.JwtBearer" Version="8.0.31" />
+    <PackageReference Include="Microsoft.AspNetCore.Mvc.NewtonsoftJson" Version="8.0.31" />
+    <PackageReference Include="Microsoft.AspNetCore.TestHost" Version="8.0.31" />
   </ItemGroup>
   <!-- Conditionally obtain references for the .NET 9.0 target -->
   <ItemGroup Condition=" '$(TargetFramework)' == 'net9.0' ">
-    <PackageReference Include="Microsoft.AspNetCore.Authentication.JwtBearer" Version="9.0.18" />
-    <PackageReference Include="Microsoft.AspNetCore.Mvc.NewtonsoftJson" Version="9.0.18" />
-    <PackageReference Include="Microsoft.AspNetCore.TestHost" Version="9.0.18" />
+    <PackageReference Include="Microsoft.AspNetCore.Authentication.JwtBearer" Version="9.0.20" />
+    <PackageReference Include="Microsoft.AspNetCore.Mvc.NewtonsoftJson" Version="9.0.20" />
+    <PackageReference Include="Microsoft.AspNetCore.TestHost" Version="9.0.20" />
   </ItemGroup>
   <!-- Conditionally obtain references for the .NET 10.0 target -->
   <ItemGroup Condition=" '$(TargetFramework)' == 'net10.0' ">
-    <PackageReference Include="Microsoft.AspNetCore.Authentication.JwtBearer" Version="10.0.10" />
-    <PackageReference Include="Microsoft.AspNetCore.Mvc.NewtonsoftJson" Version="10.0.10" />
-    <PackageReference Include="Microsoft.AspNetCore.TestHost" Version="10.0.10" />
+    <PackageReference Include="Microsoft.AspNetCore.Authentication.JwtBearer" Version="10.0.12" />
+    <PackageReference Include="Microsoft.AspNetCore.Mvc.NewtonsoftJson" Version="10.0.12" />
+    <PackageReference Include="Microsoft.AspNetCore.TestHost" Version="10.0.12" />
   </ItemGroup>
+
 </Project>
