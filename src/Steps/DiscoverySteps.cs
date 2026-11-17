@@ -16,7 +16,7 @@ public class DiscoverySteps : ConcurrentSteps
 {
     public virtual string ServiceName([CallerMemberName] string? serviceName = null)
         => serviceName ?? GetType().Name;
-    public virtual string ServiceNamespace() => GetType().Namespace ?? string.Empty;
+    public virtual string ServiceNamespace() => GetType().Namespace?.Replace('.', '_') ?? string.Empty;
 
     public FileConfiguration GivenStaticRouting(Dictionary<string, IEnumerable<string>> services, params FileRoute[] routes)
     {
