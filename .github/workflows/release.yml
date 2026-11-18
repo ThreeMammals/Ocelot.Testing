@@ -40,8 +40,10 @@ jobs:
           TOOLS="libxml2-utils xmlstarlet jq"
           COMMANDS="xmllint xmlstarlet jq"
 
+          echo "::group::Installing tools..."
           sudo apt-get update
           sudo apt-get install -y $TOOLS
+          echo "::endgroup::"
 
           echo "::group::Checking tools availability..."
           for cmd in $COMMANDS; do
@@ -72,9 +74,9 @@ jobs:
           oc_latest_release=$(curl -s "https://api.github.com/repos/ThreeMammals/Ocelot/releases/latest" | jq -r .tag_name) # # | grep -o '"tag_name": *"[^"]*"' | sed 's/.*"tag_name": *"\([^"]*\)".*/\1/'
           echo "Ocelot Ver: $oc_latest_release"
           echo "OcelotVer=$oc_latest_release" >> $GITHUB_OUTPUT
-          echo "$OcelotRefVer != $OcelotVer"
-          if [[ "$OcelotRefVer" != "$OcelotVer" ]]; then
-            echo "::error::Mismatch: Ocelot Reference ver from project file is not equal to Ocelot Latest Release tag! -> '$OcelotRefVer' != '$OcelotVer'"
+          echo "$xml_value != $oc_latest_release"
+          if [[ "$xml_value" != "$oc_latest_release" ]]; then
+            echo "::error::Mismatch: Ocelot Reference ver from project file is not equal to Ocelot Latest Release tag! -> '$xml_value' != '$oc_latest_release'"
             exit 1
           fi
       - name: Replace Version
