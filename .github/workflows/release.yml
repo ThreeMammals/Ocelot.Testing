@@ -72,7 +72,8 @@ jobs:
           oc_latest_release=$(curl -s "https://api.github.com/repos/ThreeMammals/Ocelot/releases/latest" | jq -r .tag_name) # # | grep -o '"tag_name": *"[^"]*"' | sed 's/.*"tag_name": *"\([^"]*\)".*/\1/'
           echo "Ocelot Ver: $oc_latest_release"
           echo "OcelotVer=$oc_latest_release" >> $GITHUB_OUTPUT
-          if [ "$OcelotRefVer" != "$OcelotVer" ]; then
+          echo "$OcelotRefVer != $OcelotVer"
+          if [[ "$OcelotRefVer" != "$OcelotVer" ]]; then
             echo "::error::Mismatch: Ocelot Reference ver from project file is not equal to Ocelot Latest Release tag! -> '$OcelotRefVer' != '$OcelotVer'"
             exit 1
           fi
