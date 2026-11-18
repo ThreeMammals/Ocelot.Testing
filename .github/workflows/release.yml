@@ -37,22 +37,29 @@ jobs:
           echo "::endgroup::"
       - name: Install tools
         run: |
+          TOOLS="libxml2-utils xmlstarlet jq"
+          COMMANDS="xmllint xmlstarlet jq"
+
           sudo apt-get update
-          sudo apt-get install libxml2-utils xmlstarlet jq
-          if command -v jq >/dev/null 2>&1; then
-            echo "jq is already installed: $(jq --version)"
-          else
-            echo "jq not found, installing..."
-            sudo apt-get update
-            sudo apt-get install -y jq
-          fi
-          get_latest_release() {
-            curl --silent "https://api.github.com/repos/$1/releases/latest" | jq -r .tag_name
-            # | grep -o '"tag_name": *"[^"]*"' | sed 's/.*"tag_name": *"\([^"]*\)".*/\1/'
-          }
-          echo Getting latest release via curl/jt tooling...
-          get_latest_release "ThreeMammals/Ocelot"
-          echo DONE curl/jt tooling
+          sudo apt-get install -y $TOOLS
+
+          echo "::group::Checking tools availability..."
+          for cmd in $COMMANDS; do
+            if ! command -v "$cmd" >/dev/null 2>&1; then
+              echo "::error::$cmd is not installed"
+              exit 1
+            fi
+            "$cmd" --version >/dev/null 2>&1 || {
+              echo "::error::$cmd is present but not functional"
+              exit 1
+            }
+            echo "OK: $cmd -> $(command -v "$cmd")"
+          done
+          echo "::endgroup::"
+
+          echo "::group::Getting latest release via curl/jq tools..."
+          curl --silent "https://api.github.com/repos/ThreeMammals/Ocelot/releases/latest" | jq -r .tag_name
+          echo "::endgroup::"
       - name: Read XML
         id: xml
         run: |
@@ -65,6 +72,10 @@ jobs:
           oc_latest_release=$(curl -s "https://api.github.com/repos/ThreeMammals/Ocelot/releases/latest" | jq -r .tag_name) # # | grep -o '"tag_name": *"[^"]*"' | sed 's/.*"tag_name": *"\([^"]*\)".*/\1/'
           echo "Ocelot Ver: $oc_latest_release"
           echo "OcelotVer=$oc_latest_release" >> $GITHUB_OUTPUT
+          if [ "$OcelotRefVer" != "$OcelotVer" ]; then
+            echo "::error::Mismatch: Ocelot Reference ver from project file is not equal to Ocelot Latest Release tag! -> '$OcelotRefVer' != '$OcelotVer'"
+            exit 1
+          fi
       - name: Replace Version
         id: ver
         run: |

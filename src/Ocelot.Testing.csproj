@@ -30,7 +30,7 @@
     <None Include="..\.github\ocelot_icon.png" Pack="true" PackagePath="\" Link=".package\ocelot_icon.png" />
   </ItemGroup>
   <ItemGroup>
-    <PackageReference Include="Ocelot" Version="25.0.3" />
+    <PackageReference Include="Ocelot" Version="25.0.4" />
     <PackageReference Include="Moq" Version="4.21.0" />
     <PackageReference Include="Shouldly" Version="4.3.0" />
     <PackageReference Include="System.Text.Json" Version="10.0.15" />
