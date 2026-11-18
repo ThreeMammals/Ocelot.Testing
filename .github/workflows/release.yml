@@ -37,10 +37,15 @@ jobs:
           echo "::endgroup::"
       - name: Install tools
         run: |
-          sudo apt update
-          sudo apt install libxml2-utils xmlstarlet
-          echo Installing 'jq' tool...
-          sudo apt-get install jq
+          sudo apt-get update
+          sudo apt-get install libxml2-utils xmlstarlet jq
+          if command -v jq >/dev/null 2>&1; then
+            echo "jq is already installed: $(jq --version)"
+          else
+            echo "jq not found, installing..."
+            sudo apt-get update
+            sudo apt-get install -y jq
+          fi
           get_latest_release() {
             curl --silent "https://api.github.com/repos/$1/releases/latest" | jq -r .tag_name
             # | grep -o '"tag_name": *"[^"]*"' | sed 's/.*"tag_name": *"\([^"]*\)".*/\1/'
